@@ -7,6 +7,8 @@ import '../../../core/widgets/app_button.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_loader.dart';
 import '../providers/mind_map_provider.dart';
+import '../../debate/screens/home_screen.dart';
+import '../../../core/theme/wonderous_animations.dart';
 import '../../../widgets/api_key_settings_dialog.dart';
 import '../../../widgets/developer_debug_dialog.dart';
 
@@ -452,6 +454,54 @@ class _LectureCaptureScreenState extends State<LectureCaptureScreen> {
                         label: 'Paste',
                         variant: AppButtonVariant.secondary,
                         onPressed: () => _showYouTubeDialog(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // 6. AI Debate Arena Entry Card
+              AppCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.raisedSurface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.hairlineBorder),
+                        ),
+                        child: const Icon(Icons.record_voice_over_rounded,
+                            size: 20, color: AppColors.accent),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('AI Debate Arena',
+                                style: AppTypography.titleSmall),
+                            SizedBox(height: 2),
+                            Text(
+                              'Voice-to-voice debate championship with animated AI mascot',
+                              style: AppTypography.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      AppButton(
+                        label: 'Debate',
+                        variant: AppButtonVariant.primary,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            WonderousAnimations.pageRoute(const HomeScreen()),
+                          );
+                        },
                       ),
                     ],
                   ),

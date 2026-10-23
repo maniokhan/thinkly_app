@@ -16,7 +16,7 @@ import 'package:thinkly_app/features/mascot/models/mascot_emotion.dart';
 import 'package:thinkly_app/features/mascot/models/mascot_state.dart';
 import 'package:thinkly_app/features/mascot/widgets/mascot_view.dart';
 import 'package:thinkly_app/features/debate/widgets/transcript_sheet.dart';
-import 'package:thinkly_app/main.dart';
+import 'package:thinkly_app/features/debate/debate_app.dart';
 import 'package:thinkly_app/services/audio_service.dart';
 import 'package:thinkly_app/services/gemini_live_service.dart';
 

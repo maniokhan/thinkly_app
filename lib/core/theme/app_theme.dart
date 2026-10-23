@@ -23,6 +23,10 @@ class AppColors {
   static const Color statusAmber = Color(0xFFF59E0B);
 
   // Legacy & Alias Mappings (Ensuring zero breaks across models, debate arena & canvas)
+  static const Color primary = accent;
+  static const Color primaryDark = accentDark;
+  static const Color primaryLight = accent;
+  static const Color secondary = accent;
   static const Color surfaceElevated = raisedSurface;
   static const Color accentDark = Color(0xFF98CC00);
   static const Color accentDim = Color(0x22C6FF00);
