@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../../core/services/pdf_notes_service.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_loader.dart';
 import '../providers/mind_map_provider.dart';
 
 class PdfNotesScreen extends StatefulWidget {
@@ -40,18 +42,18 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
               'Academic PDF Notes',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: AppTypography.titleMedium,
             ),
             Text(
               session.title,
-              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              style: AppTypography.bodySmall,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -64,9 +66,9 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textPrimary),
+                      child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.accent),
                     )
-                  : const Icon(Icons.share_rounded, size: 20),
+                  : const Icon(Icons.share_rounded, size: 20, color: AppColors.primaryText),
               tooltip: 'Share / Save PDF',
               onPressed: _isSharing
                   ? null
@@ -81,7 +83,7 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
             ),
           ] else ...[
             IconButton(
-              icon: const Icon(Icons.copy_rounded, size: 20),
+              icon: const Icon(Icons.copy_rounded, size: 20, color: AppColors.primaryText),
               tooltip: 'Copy Flashcards Markdown',
               onPressed: _cachedStudyGuide == null
                   ? null
@@ -89,36 +91,36 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
                       Clipboard.setData(ClipboardData(text: _cachedStudyGuide!));
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Study guide copied to clipboard!'),
-                          backgroundColor: AppColors.cardElevated,
+                          content: Text('Study guide copied to clipboard'),
                           duration: Duration(seconds: 2),
                         ),
                       );
                     },
             ),
           ],
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.s),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m, vertical: 6),
             decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.border)),
+              border: Border(bottom: BorderSide(color: AppColors.hairlineBorder, width: 1.0)),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: InkWell(
                     onTap: () => setState(() => _selectedView = 0),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.radiusS,
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: _selectedView == 0 ? AppColors.pillTag : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
+                        color: _selectedView == 0 ? AppColors.raisedSurface : Colors.transparent,
+                        borderRadius: AppRadius.radiusS,
                         border: Border.all(
-                          color: _selectedView == 0 ? AppColors.borderSelected : Colors.transparent,
+                          color: _selectedView == 0 ? AppColors.accent : Colors.transparent,
+                          width: 1.0,
                         ),
                       ),
                       child: FittedBox(
@@ -129,15 +131,16 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
                             Icon(
                               Icons.picture_as_pdf_rounded,
                               size: 15,
-                              color: _selectedView == 0 ? AppColors.rose : AppColors.textSecondary,
+                              color: _selectedView == 0 ? AppColors.accent : AppColors.secondaryText,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'Academic Document',
                               style: TextStyle(
+                                fontFamily: AppTypography.fontHeading,
                                 fontSize: 12,
                                 fontWeight: _selectedView == 0 ? FontWeight.w700 : FontWeight.w500,
-                                color: _selectedView == 0 ? AppColors.textPrimary : AppColors.textSecondary,
+                                color: _selectedView == 0 ? AppColors.primaryText : AppColors.secondaryText,
                               ),
                             ),
                           ],
@@ -146,7 +149,7 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.s),
                 Expanded(
                   child: InkWell(
                     onTap: () {
@@ -155,14 +158,15 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
                         _loadStudyGuide(provider);
                       }
                     },
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: AppRadius.radiusS,
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: _selectedView == 1 ? AppColors.pillTag : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
+                        color: _selectedView == 1 ? AppColors.raisedSurface : Colors.transparent,
+                        borderRadius: AppRadius.radiusS,
                         border: Border.all(
-                          color: _selectedView == 1 ? AppColors.borderSelected : Colors.transparent,
+                          color: _selectedView == 1 ? AppColors.accent : Colors.transparent,
+                          width: 1.0,
                         ),
                       ),
                       child: FittedBox(
@@ -173,15 +177,16 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
                             Icon(
                               Icons.auto_stories_rounded,
                               size: 15,
-                              color: _selectedView == 1 ? AppColors.cyan : AppColors.textSecondary,
+                              color: _selectedView == 1 ? AppColors.accent : AppColors.secondaryText,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               'Flashcards & Guide',
                               style: TextStyle(
+                                fontFamily: AppTypography.fontHeading,
                                 fontSize: 12,
                                 fontWeight: _selectedView == 1 ? FontWeight.w700 : FontWeight.w500,
-                                color: _selectedView == 1 ? AppColors.textPrimary : AppColors.textSecondary,
+                                color: _selectedView == 1 ? AppColors.primaryText : AppColors.secondaryText,
                               ),
                             ),
                           ],
@@ -204,58 +209,48 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
               canChangeOrientation: false,
               canDebug: false,
               pdfFileName: '${session.title.replaceAll(' ', '_')}_Thinkly_Notes.pdf',
-              loadingWidget: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(strokeWidth: 2, color: AppColors.alabaster),
-                    SizedBox(height: 12),
-                    Text(
-                      'Synthesizing publication-grade PDF notes...',
-                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
+              loadingWidget: const AppLoader(
+                message: 'Synthesizing publication-grade PDF notes...',
               ),
             )
           : _isLoadingGuide
-              ? const Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircularProgressIndicator(strokeWidth: 2, color: AppColors.cyan),
-                      SizedBox(height: 12),
-                      Text(
-                        'Gemini synthesizing active recall flashcards...',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                      ),
-                    ],
-                  ),
+              ? const AppLoader(
+                  message: 'Gemini synthesizing active recall flashcards...',
                 )
               : _cachedStudyGuide == null
                   ? Center(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.auto_stories_rounded, size: 40, color: AppColors.textMuted),
-                            const SizedBox(height: 12),
+                            Container(
+                              width: 52,
+                              height: 52,
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: AppRadius.radiusM,
+                                border: Border.all(color: AppColors.hairlineBorder),
+                              ),
+                              child: const Icon(Icons.auto_stories_rounded, size: 24, color: AppColors.secondaryText),
+                            ),
+                            const SizedBox(height: AppSpacing.m),
                             const Text(
                               'AI Study Guide & Active Recall',
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                              style: AppTypography.titleMedium,
+                              textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: AppSpacing.xs),
                             const Text(
                               'Synthesize real-time concept cards and question-answer pairs for spaced repetition.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                              style: AppTypography.bodyMedium,
                             ),
-                            const SizedBox(height: 16),
-                            ElevatedButton.icon(
+                            const SizedBox(height: AppSpacing.l),
+                            AppButton.primary(
+                              label: 'Generate Study Guide',
+                              icon: Icons.auto_awesome,
                               onPressed: () => _loadStudyGuide(provider),
-                              icon: const Icon(Icons.auto_awesome, size: 16),
-                              label: const Text('Generate Study Guide'),
                             ),
                           ],
                         ),
@@ -264,17 +259,27 @@ class _PdfNotesScreenState extends State<PdfNotesScreen> {
                   : Markdown(
                       data: _cachedStudyGuide!,
                       selectable: true,
-                      padding: const EdgeInsets.all(18),
+                      padding: const EdgeInsets.all(AppSpacing.l),
                       styleSheet: MarkdownStyleSheet(
-                        p: const TextStyle(fontSize: 13.5, height: 1.6, color: AppColors.textSecondary),
-                        h1: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary),
-                        h2: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                        h3: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                        strong: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                        blockquote: const TextStyle(color: AppColors.textSecondary, fontStyle: FontStyle.italic),
+                        p: AppTypography.bodyMedium.copyWith(color: AppColors.secondaryText, height: 1.6),
+                        h1: AppTypography.display.copyWith(fontSize: 20),
+                        h2: AppTypography.titleLarge.copyWith(fontSize: 16),
+                        h3: AppTypography.titleMedium.copyWith(fontSize: 14),
+                        strong: const TextStyle(
+                          fontFamily: AppTypography.fontHeading,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryText,
+                        ),
+                        code: const TextStyle(
+                          fontFamily: AppTypography.fontMono,
+                          fontSize: 12,
+                          color: AppColors.accent,
+                          backgroundColor: AppColors.raisedSurface,
+                        ),
+                        blockquote: AppTypography.bodyMedium.copyWith(color: AppColors.secondaryText, fontStyle: FontStyle.italic),
                         blockquoteDecoration: BoxDecoration(
-                          color: AppColors.card,
-                          border: const Border(left: BorderSide(color: AppColors.borderSelected, width: 3)),
+                          color: AppColors.surface,
+                          border: const Border(left: BorderSide(color: AppColors.accent, width: 2)),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),

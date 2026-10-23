@@ -750,16 +750,9 @@ class FloatingDock extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.surface.withValues(alpha: 0.96),
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: AppColors.border),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black54,
-                  blurRadius: 18,
-                  offset: Offset(0, 6),
-                ),
-              ],
+              border: Border.all(color: AppColors.hairlineBorder, width: 1.0),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

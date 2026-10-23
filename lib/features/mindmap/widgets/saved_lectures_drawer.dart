@@ -24,7 +24,7 @@ class SavedLecturesDrawer extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.only(top: 10, bottom: 4),
               decoration: BoxDecoration(
-                color: AppColors.borderRoot,
+                color: AppColors.hairlineBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -32,9 +32,9 @@ class SavedLecturesDrawer extends StatelessWidget {
 
           // Header
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.m, 10, 12, 12),
             decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppColors.border)),
+              border: Border(bottom: BorderSide(color: AppColors.hairlineBorder, width: 1.0)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -42,16 +42,12 @@ class SavedLecturesDrawer extends StatelessWidget {
                 const Expanded(
                   child: Row(
                     children: [
-                      Icon(Icons.library_books_rounded, color: AppColors.textPrimary, size: 20),
-                      SizedBox(width: 8),
+                      Icon(Icons.library_books_rounded, color: AppColors.primaryText, size: 20),
+                      SizedBox(width: AppSpacing.s),
                       Flexible(
                         child: Text(
                           'Saved Lectures',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
+                          style: AppTypography.titleMedium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -60,7 +56,7 @@ class SavedLecturesDrawer extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                  icon: const Icon(Icons.close, size: 20, color: AppColors.secondaryText),
                   onPressed: () => Navigator.of(context).pop(),
                   visualDensity: VisualDensity.compact,
                 ),
@@ -70,23 +66,23 @@ class SavedLecturesDrawer extends StatelessWidget {
 
           Expanded(
             child: saved.isEmpty
-                ? Center(
+                ? const Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(24.0),
+                      padding: EdgeInsets.all(AppSpacing.l),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.bookmark_border_rounded, size: 40, color: AppColors.textMuted.withValues(alpha: 0.5)),
-                          const SizedBox(height: 12),
-                          const Text(
+                          Icon(Icons.bookmark_border_rounded, size: 40, color: AppColors.secondaryText),
+                          SizedBox(height: 12),
+                          Text(
                             'No Saved Lectures Yet',
-                            style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                            style: AppTypography.titleSmall,
                           ),
-                          const SizedBox(height: 6),
-                          const Text(
+                          SizedBox(height: 6),
+                          Text(
                             'Saved lectures will automatically appear here with one-click PDF export.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                            style: AppTypography.bodySmall,
                           ),
                         ],
                       ),
@@ -101,35 +97,41 @@ class SavedLecturesDrawer extends StatelessWidget {
 
                       return ListTile(
                         selected: isCurrent,
-                        selectedTileColor: AppColors.pillTag,
-                        leading: CircleAvatar(
-                          backgroundColor: isCurrent ? AppColors.alabaster : AppColors.card,
-                          radius: 16,
+                        selectedTileColor: AppColors.raisedSurface,
+                        leading: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: isCurrent ? AppColors.accent : AppColors.raisedSurface,
+                            borderRadius: AppRadius.radiusS,
+                            border: Border.all(color: AppColors.hairlineBorder),
+                          ),
                           child: Icon(
                             Icons.hub_rounded,
                             size: 16,
-                            color: isCurrent ? AppColors.alabasterText : AppColors.textSecondary,
+                            color: isCurrent ? AppColors.accentText : AppColors.secondaryText,
                           ),
                         ),
                         title: Text(
                           item.title,
                           style: const TextStyle(
+                            fontFamily: AppTypography.fontHeading,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            color: AppColors.primaryText,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
                           '${item.nodes.length} nodes • ${_formatDate(item.lastModified)}',
-                          style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                          style: AppTypography.labelSmall,
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.picture_as_pdf_rounded, size: 17, color: AppColors.rose),
+                              icon: const Icon(Icons.picture_as_pdf_rounded, size: 17, color: AppColors.accent),
                               tooltip: 'Export Notes PDF',
                               onPressed: () {
                                 showDialog(
@@ -140,9 +142,11 @@ class SavedLecturesDrawer extends StatelessWidget {
                               splashRadius: 16,
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 18, color: AppColors.textMuted),
-                              tooltip: 'Delete Lecture',
-                              onPressed: () => provider.deleteSavedLecture(item.id),
+                              icon: const Icon(Icons.delete_outline_rounded, size: 17, color: AppColors.secondaryText),
+                              tooltip: 'Delete',
+                              onPressed: () {
+                                provider.deleteSavedLecture(item.id);
+                              },
                               splashRadius: 16,
                             ),
                           ],
@@ -161,6 +165,12 @@ class SavedLecturesDrawer extends StatelessWidget {
   }
 
   String _formatDate(DateTime dt) {
-    return '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final m = months[dt.month - 1];
+    final d = dt.day;
+    final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+    final min = dt.minute.toString().padLeft(2, '0');
+    final ampm = dt.hour >= 12 ? 'PM' : 'AM';
+    return '$m $d • $hour:$min $ampm';
   }
 }

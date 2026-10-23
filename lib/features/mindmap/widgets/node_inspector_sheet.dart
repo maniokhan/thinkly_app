@@ -62,16 +62,9 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: widget.isBottomSheet
-            ? const BorderRadius.vertical(top: Radius.circular(20))
-            : BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, width: 1.0),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black54,
-            blurRadius: 20,
-            offset: Offset(0, -2),
-          ),
-        ],
+            ? const BorderRadius.vertical(top: Radius.circular(AppRadius.l))
+            : AppRadius.radiusL,
+        border: Border.all(color: AppColors.hairlineBorder, width: 1.0),
       ),
       child: Column(
         mainAxisSize: widget.isBottomSheet ? MainAxisSize.min : MainAxisSize.max,

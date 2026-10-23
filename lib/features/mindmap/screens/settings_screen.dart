@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/env/env_config.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/services/gemini_service.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_badge.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -91,17 +94,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: AppColors.accentEmerald, size: 18),
-            SizedBox(width: 8),
-            Text('Settings saved successfully'),
-          ],
-        ),
-        backgroundColor: AppColors.card,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      const SnackBar(
+        content: Text('Settings saved successfully'),
+        duration: Duration(seconds: 2),
       ),
     );
   }
@@ -114,7 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m, vertical: AppSpacing.s),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -122,34 +117,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(AppSpacing.s),
                     decoration: BoxDecoration(
-                      color: AppColors.card,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppColors.border),
+                      color: AppColors.surface,
+                      borderRadius: AppRadius.radiusS,
+                      border: Border.all(color: AppColors.hairlineBorder),
                     ),
-                    child: const Icon(Icons.settings_outlined, color: AppColors.accentIndigo, size: 22),
+                    child: const Icon(Icons.settings_outlined, color: AppColors.accent, size: 22),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.s),
                   const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Settings',
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.5,
-                          ),
+                          style: AppTypography.titleLarge,
                         ),
                         Text(
                           'AI Engine & App Preferences',
-                          style: TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 12,
-                          ),
+                          style: AppTypography.bodySmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -158,38 +145,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.l),
 
               // SECTION 1: Gemini AI Engine
               _buildSectionCard(
+                index: 0,
                 title: 'Gemini AI Engine',
                 icon: Icons.auto_awesome,
-                iconColor: AppColors.accentViolet,
+                iconColor: AppColors.accent,
                 children: [
                   const Text(
                     'Google Gemini API Key',
                     style: TextStyle(
-                      color: AppColors.textPrimary,
+                      fontFamily: AppTypography.fontHeading,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
+                      color: AppColors.primaryText,
                     ),
                   ),
                   const SizedBox(height: 4),
                   const Text(
                     'Used for live classroom speech synthesis, concept mapping, and notes generation.',
-                    style: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 11,
-                    ),
+                    style: AppTypography.bodySmall,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpacing.s),
                   TextField(
                     controller: _apiKeyController,
                     obscureText: _obscureText,
                     style: const TextStyle(
-                      color: AppColors.textPrimary,
+                      fontFamily: AppTypography.fontMono,
                       fontSize: 13,
-                      fontFamily: 'monospace',
+                      color: AppColors.primaryText,
                     ),
                     decoration: InputDecoration(
                       hintText: 'AIzaSy...',
@@ -197,43 +183,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         icon: Icon(
                           _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                           size: 18,
-                          color: AppColors.textMuted,
+                          color: AppColors.secondaryText,
                         ),
                         onPressed: () => setState(() => _obscureText = !_obscureText),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: AppSpacing.m),
 
                   // Model Selector
                   const Text(
                     'Active AI Model',
                     style: TextStyle(
-                      color: AppColors.textPrimary,
+                      fontFamily: AppTypography.fontHeading,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
+                      color: AppColors.primaryText,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.s),
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: AppSpacing.s,
+                    runSpacing: AppSpacing.s,
                     children: _models.map((model) {
                       final isSelected = _selectedModel == model;
                       return ChoiceChip(
                         label: Text(
                           model,
                           style: TextStyle(
+                            fontFamily: AppTypography.fontMono,
                             fontSize: 11,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
+                            letterSpacing: 0.5,
+                            color: isSelected ? AppColors.accentText : AppColors.secondaryText,
                           ),
                         ),
                         selected: isSelected,
-                        selectedColor: AppColors.accentIndigo.withAlpha(64),
-                        backgroundColor: AppColors.card,
+                        selectedColor: AppColors.accent,
+                        backgroundColor: AppColors.surface,
+                        elevation: 0,
                         side: BorderSide(
-                          color: isSelected ? AppColors.accentIndigo : AppColors.border,
+                          color: isSelected ? AppColors.accent : AppColors.hairlineBorder,
                         ),
                         onSelected: (val) {
                           if (val) setState(() => _selectedModel = model);
@@ -241,17 +231,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     }).toList(),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: AppSpacing.m),
 
                   // Test Connection & Status
                   if (_testResult != null) ...[
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(AppSpacing.s),
                       decoration: BoxDecoration(
-                        color: _testSuccess ? AppColors.accentEmerald.withAlpha(30) : AppColors.accentRose.withAlpha(30),
-                        borderRadius: BorderRadius.circular(8),
+                        color: _testSuccess ? AppColors.statusLive.withAlpha(20) : AppColors.destructiveBg,
+                        borderRadius: AppRadius.radiusS,
                         border: Border.all(
-                          color: _testSuccess ? AppColors.accentEmerald : AppColors.accentRose,
+                          color: _testSuccess ? AppColors.statusLive : AppColors.destructive,
                           width: 0.8,
                         ),
                       ),
@@ -260,43 +250,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         children: [
                           Icon(
                             _testSuccess ? Icons.check_circle : Icons.error_outline,
-                            color: _testSuccess ? AppColors.accentEmerald : AppColors.accentRose,
+                            color: _testSuccess ? AppColors.statusLive : AppColors.destructive,
                             size: 16,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.s),
                           Expanded(
                             child: Text(
                               _testResult!,
-                              style: TextStyle(
-                                color: _testSuccess ? AppColors.accentEmerald : AppColors.accentRose,
-                                fontSize: 11,
-                                height: 1.3,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: _testSuccess ? AppColors.statusLive : AppColors.destructive,
                               ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.m),
                   ],
 
                   // Action Buttons
                   Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: AppSpacing.s,
+                    runSpacing: AppSpacing.s,
                     children: [
-                      OutlinedButton.icon(
+                      AppButton.secondary(
+                        label: _isTesting ? 'Testing...' : 'Test Connection',
+                        icon: Icons.network_check_rounded,
+                        isLoading: _isTesting,
+                        height: 42,
                         onPressed: _isTesting ? null : _testConnection,
-                        icon: _isTesting
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accentIndigo),
-                              )
-                            : const Icon(Icons.network_check_rounded, size: 16),
-                        label: Text(_isTesting ? 'Testing...' : 'Test Connection'),
                       ),
-                      OutlinedButton.icon(
+                      AppButton.ghost(
+                        label: 'Reset to .env',
+                        icon: Icons.refresh_rounded,
+                        height: 42,
                         onPressed: () async {
                           await env.resetToEnv();
                           _apiKeyController.text = env.apiKey;
@@ -305,116 +292,97 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             _testResult = null;
                           });
                         },
-                        icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: const Text('Reset to .env'),
                       ),
-                      ElevatedButton.icon(
+                      AppButton.primary(
+                        label: 'Save Changes',
+                        icon: Icons.save_rounded,
+                        height: 42,
                         onPressed: _saveSettings,
-                        icon: const Icon(Icons.save_rounded, size: 16),
-                        label: const Text('Save Changes'),
                       ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.m),
 
               // SECTION 2: Audio & Microphone
               _buildSectionCard(
+                index: 1,
                 title: 'Live Classroom Audio',
                 icon: Icons.mic_rounded,
-                iconColor: AppColors.accentAmber,
+                iconColor: AppColors.statusLive,
                 children: [
                   _buildSettingRow(
                     icon: Icons.mic_external_on_rounded,
                     title: 'Microphone Sensitivity',
                     subtitle: 'Automatic gain control enabled for lecture halls',
-                    trailing: const Text(
-                      'Optimized',
-                      style: TextStyle(color: AppColors.accentEmerald, fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
+                    trailing: const AppBadge(text: 'OPTIMIZED', isLive: true),
                   ),
-                  const Divider(color: AppColors.border, height: 20),
+                  const Divider(color: AppColors.hairlineBorder, height: 20),
                   _buildSettingRow(
                     icon: Icons.record_voice_over_rounded,
                     title: 'Speech Recognition Engine',
                     subtitle: 'Device Speech API with Gemini Fallback synthesis',
-                    trailing: const Text(
-                      'Hybrid AI',
-                      style: TextStyle(color: AppColors.accentViolet, fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
+                    trailing: const AppBadge(text: 'HYBRID AI', isAccent: true),
                   ),
-                  const Divider(color: AppColors.border, height: 20),
+                  const Divider(color: AppColors.hairlineBorder, height: 20),
                   _buildSettingRow(
                     icon: Icons.offline_bolt_rounded,
                     title: 'Simulated Lecture Mode',
                     subtitle: 'Full offline simulation of Operating Systems lectures',
-                    trailing: const Text(
-                      'Ready',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                    ),
+                    trailing: const AppBadge(text: 'READY'),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.m),
 
               // SECTION 3: Notes & PDF Engine
               _buildSectionCard(
+                index: 2,
                 title: 'PDF & Notes Engine',
                 icon: Icons.picture_as_pdf_rounded,
-                iconColor: AppColors.accentRose,
+                iconColor: AppColors.primaryText,
                 children: [
                   _buildSettingRow(
                     icon: Icons.format_size_rounded,
                     title: 'Academic Document Format',
                     subtitle: 'ISO 216 standard formatted for print & reading',
-                    trailing: const Text(
-                      'A4 Portrait',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                    ),
+                    trailing: const AppBadge(text: 'A4 PORTRAIT'),
                   ),
-                  const Divider(color: AppColors.border, height: 20),
+                  const Divider(color: AppColors.hairlineBorder, height: 20),
                   _buildSettingRow(
                     icon: Icons.style_rounded,
                     title: 'Active Recall Flashcards',
                     subtitle: 'Automatically generates Q&A study cards for exam prep',
-                    trailing: const Text(
-                      'Included',
-                      style: TextStyle(color: AppColors.accentEmerald, fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
+                    trailing: const AppBadge(text: 'INCLUDED', isAccent: true),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.m),
 
               // SECTION 4: System Information
               _buildSectionCard(
+                index: 3,
                 title: 'System & Device Info',
                 icon: Icons.phone_android_rounded,
-                iconColor: AppColors.accentTeal,
+                iconColor: AppColors.secondaryText,
                 children: [
                   _buildSettingRow(
                     icon: Icons.touch_app_rounded,
                     title: 'App Version',
                     subtitle: 'Thinkly Mobile Edition v1.0.0+1',
-                    trailing: const Text(
-                      'Production',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                    ),
+                    trailing: const AppBadge(text: 'PRODUCTION'),
                   ),
-                  const Divider(color: AppColors.border, height: 20),
+                  const Divider(color: AppColors.hairlineBorder, height: 20),
                   _buildSettingRow(
                     icon: Icons.verified_user_rounded,
                     title: 'Target Platform',
                     subtitle: 'Android 15+ / Pixel 9 Pro Architecture',
-                    trailing: const Text(
-                      'ARM64-v8a',
-                      style: TextStyle(color: AppColors.accentEmerald, fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
+                    trailing: const AppBadge(text: 'ARM64-V8A', isLive: true),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.xl),
             ],
           ),
         ),
@@ -427,14 +395,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required IconData icon,
     required Color iconColor,
     required List<Widget> children,
+    int index = 0,
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.m),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        borderRadius: AppRadius.radiusM,
+        border: Border.all(color: AppColors.hairlineBorder, width: 1.0),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -442,27 +411,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             children: [
               Icon(icon, size: 18, color: iconColor),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.s),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                  ),
+                  style: AppTypography.titleSmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.m),
           ...children,
         ],
       ),
-    );
+    ).animate(delay: (index * 40).ms).fade(duration: 200.ms, curve: Curves.easeOut).slideY(begin: 0.04, end: 0, duration: 200.ms, curve: Curves.easeOut);
   }
 
   Widget _buildSettingRow({
@@ -473,8 +437,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: AppColors.textMuted),
-        const SizedBox(width: 12),
+        Icon(icon, size: 18, color: AppColors.secondaryText),
+        const SizedBox(width: AppSpacing.s),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -482,23 +446,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 title,
                 style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 12,
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w600,
+                  color: AppColors.primaryText,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 10,
-                ),
+                style: AppTypography.bodySmall,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: AppSpacing.s),
         trailing,
       ],
     );

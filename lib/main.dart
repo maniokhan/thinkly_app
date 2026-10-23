@@ -95,34 +95,34 @@ class _ThinklyShellState extends State<ThinklyShell> {
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.border, width: 1.0)),
+          border: Border(top: BorderSide(color: AppColors.hairlineBorder, width: 1.0)),
         ),
         child: NavigationBar(
           selectedIndex: _currentIndex,
           onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
           backgroundColor: AppColors.surface,
-          indicatorColor: AppColors.cardElevated,
+          indicatorColor: AppColors.raisedSurface,
           height: 60,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.hub_rounded, size: 20, color: AppColors.textSecondary),
-              selectedIcon: Icon(Icons.hub_rounded, size: 20, color: AppColors.accentIndigo),
+              icon: Icon(Icons.hub_rounded, size: 20, color: AppColors.secondaryText),
+              selectedIcon: Icon(Icons.hub_rounded, size: 20, color: AppColors.accent),
               label: 'Mind Map',
             ),
             NavigationDestination(
-              icon: Icon(Icons.description_rounded, size: 20, color: AppColors.textSecondary),
-              selectedIcon: Icon(Icons.description_rounded, size: 20, color: AppColors.accentRose),
+              icon: Icon(Icons.description_rounded, size: 20, color: AppColors.secondaryText),
+              selectedIcon: Icon(Icons.description_rounded, size: 20, color: AppColors.accent),
               label: 'Notes',
             ),
             NavigationDestination(
-              icon: Icon(Icons.folder_special_rounded, size: 20, color: AppColors.textSecondary),
-              selectedIcon: Icon(Icons.folder_special_rounded, size: 20, color: AppColors.accentAmber),
+              icon: Icon(Icons.folder_special_rounded, size: 20, color: AppColors.secondaryText),
+              selectedIcon: Icon(Icons.folder_special_rounded, size: 20, color: AppColors.accent),
               label: 'Library',
             ),
             NavigationDestination(
-              icon: Icon(Icons.tune_rounded, size: 20, color: AppColors.textSecondary),
-              selectedIcon: Icon(Icons.tune_rounded, size: 20, color: AppColors.accentViolet),
+              icon: Icon(Icons.tune_rounded, size: 20, color: AppColors.secondaryText),
+              selectedIcon: Icon(Icons.tune_rounded, size: 20, color: AppColors.accent),
               label: 'Config',
             ),
           ],

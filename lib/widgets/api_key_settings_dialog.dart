@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/env/env_config.dart';
 import '../core/theme/app_theme.dart';
 import '../core/services/gemini_service.dart';
+import '../core/widgets/app_button.dart';
 
 class ApiKeySettingsDialog extends StatefulWidget {
   const ApiKeySettingsDialog({super.key});
@@ -95,9 +96,10 @@ class _ApiKeySettingsDialogState extends State<ApiKeySettingsDialog> {
 
     return Dialog(
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border),
+      elevation: 0,
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.radiusL,
+        side: BorderSide(color: AppColors.hairlineBorder, width: 1.0),
       ),
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 12 : 24,
@@ -121,25 +123,21 @@ class _ApiKeySettingsDialogState extends State<ApiKeySettingsDialog> {
                         Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: AppColors.pillTag,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.border),
+                            color: AppColors.raisedSurface,
+                            borderRadius: AppRadius.radiusS,
+                            border: Border.all(color: AppColors.hairlineBorder),
                           ),
                           child: const Icon(
                             Icons.settings_suggest_rounded,
-                            color: AppColors.textPrimary,
+                            color: AppColors.primaryText,
                             size: 18,
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: AppSpacing.s),
                         const Flexible(
                           child: Text(
                             'API Key & Settings',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+                            style: AppTypography.titleMedium,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -148,208 +146,153 @@ class _ApiKeySettingsDialogState extends State<ApiKeySettingsDialog> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                    icon: const Icon(Icons.close, size: 18, color: AppColors.secondaryText),
                     onPressed: () => Navigator.of(context).pop(),
                     visualDensity: VisualDensity.compact,
                   ),
                 ],
               ),
-
-              const SizedBox(height: 16),
-
-              // API Key Field
-              const Text(
-                'Gemini API Key',
-                style: TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
               const SizedBox(height: 6),
+              const Text(
+                'Configure your Google Gemini API key to enable live speech extraction & academic notes synthesis:',
+                style: AppTypography.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.m),
+
+              // API Key input
               TextField(
                 controller: _apiKeyController,
                 obscureText: _obscureText,
-                style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+                style: const TextStyle(
+                  fontFamily: AppTypography.fontMono,
+                  fontSize: 12.5,
+                  color: AppColors.primaryText,
+                ),
                 decoration: InputDecoration(
+                  labelText: 'Gemini API Key',
                   hintText: 'AIzaSy...',
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
                       size: 18,
-                      color: AppColors.textSecondary,
+                      color: AppColors.secondaryText,
                     ),
                     onPressed: () => setState(() => _obscureText = !_obscureText),
                   ),
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
-                'Used for real-time concept extraction, mind map generation, and study guide summaries.',
-                style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-              ),
+              const SizedBox(height: AppSpacing.m),
 
-              const SizedBox(height: 16),
-
-              // Model Selection
+              // Model selector
               const Text(
-                'Gemini Model',
+                'Active Gemini Model',
                 style: TextStyle(
-                  fontSize: 12.5,
+                  fontFamily: AppTypography.fontHeading,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+                  color: AppColors.primaryText,
                 ),
               ),
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedModel,
-                    isExpanded: true,
-                    dropdownColor: AppColors.surface,
-                    style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
-                    items: models.map((model) {
-                      return DropdownMenuItem(
-                        value: model,
-                        child: Text(model),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => _selectedModel = val);
-                      }
-                    },
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Auto-PiP Switch Toggle
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.card,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.picture_in_picture_alt_rounded, size: 18, color: AppColors.textPrimary),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Auto-enable PiP when switching tabs',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Opens floating companion on tab blur during lecture',
-                            style: TextStyle(fontSize: 10.5, color: AppColors.textSecondary),
-                          ),
-                        ],
+              const SizedBox(height: AppSpacing.s),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: models.map((m) {
+                  final isSelected = _selectedModel == m;
+                  return ChoiceChip(
+                    label: Text(
+                      m,
+                      style: TextStyle(
+                        fontFamily: AppTypography.fontMono,
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        letterSpacing: 0.5,
+                        color: isSelected ? AppColors.accentText : AppColors.secondaryText,
                       ),
                     ),
-                    Switch(
-                      value: env.autoPipEnabled,
-                      activeThumbColor: AppColors.alabaster,
-                      onChanged: (val) {
-                        env.setAutoPipEnabled(val);
-                      },
+                    selected: isSelected,
+                    selectedColor: AppColors.accent,
+                    backgroundColor: AppColors.surface,
+                    elevation: 0,
+                    side: BorderSide(
+                      color: isSelected ? AppColors.accent : AppColors.hairlineBorder,
                     ),
-                  ],
-                ),
+                    onSelected: (val) {
+                      if (val) setState(() => _selectedModel = m);
+                    },
+                  );
+                }).toList(),
               ),
 
               if (_testResult != null) ...[
-                const SizedBox(height: 12),
-                Text(
-                  _testResult!,
-                  style: TextStyle(
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.w600,
-                    color: _testSuccess ? AppColors.emerald : AppColors.amber,
+                const SizedBox(height: AppSpacing.m),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.s),
+                  decoration: BoxDecoration(
+                    color: _testSuccess ? AppColors.statusLive.withAlpha(20) : AppColors.destructiveBg,
+                    borderRadius: AppRadius.radiusS,
+                    border: Border.all(
+                      color: _testSuccess ? AppColors.statusLive : AppColors.destructive,
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _testSuccess ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                        color: _testSuccess ? AppColors.statusLive : AppColors.destructive,
+                        size: 16,
+                      ),
+                      const SizedBox(width: AppSpacing.s),
+                      Expanded(
+                        child: Text(
+                          _testResult!,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: _testSuccess ? AppColors.statusLive : AppColors.destructive,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
 
-              const SizedBox(height: 18),
+              const SizedBox(height: AppSpacing.l),
 
-              // Responsive Action Buttons (Never overflow!)
+              // Action buttons
               Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 8,
-                runSpacing: 10,
+                alignment: WrapAlignment.end,
+                spacing: AppSpacing.s,
+                runSpacing: AppSpacing.s,
                 children: [
-                  OutlinedButton.icon(
+                  AppButton.ghost(
+                    label: 'Reset to .env',
+                    height: 40,
                     onPressed: () async {
                       await env.resetToDefault();
                       _apiKeyController.text = env.apiKey;
                       setState(() {
                         _selectedModel = EnvConfig.sanitizeModel(env.model);
-                        _testResult = 'Reset to .env default configuration.';
+                        _testResult = null;
                       });
                     },
-                    icon: const Icon(Icons.refresh_rounded, size: 14),
-                    label: const Text('Reset to .env', style: TextStyle(fontSize: 11.5)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    ),
                   ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: _isTesting ? null : _testConnection,
-                        icon: _isTesting
-                            ? const SizedBox(
-                                width: 12,
-                                height: 12,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.textPrimary,
-                                ),
-                              )
-                            : const Icon(Icons.flash_on_rounded, size: 14),
-                        label: Text(_isTesting ? 'Testing...' : 'Test Connection', style: const TextStyle(fontSize: 11.5)),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () async {
-                          await env.updateConfig(
-                            apiKey: _apiKeyController.text.trim(),
-                            model: _selectedModel,
-                          );
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('API Configuration Saved!'),
-                                backgroundColor: AppColors.cardElevated,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        ),
-                        child: const Text('Save Changes', style: TextStyle(fontSize: 11.5)),
-                      ),
-                    ],
+                  AppButton.secondary(
+                    label: _isTesting ? 'Testing...' : 'Test Connection',
+                    isLoading: _isTesting,
+                    height: 40,
+                    onPressed: _isTesting ? null : _testConnection,
+                  ),
+                  AppButton.primary(
+                    label: 'Save Changes',
+                    height: 40,
+                    onPressed: () async {
+                      await env.updateConfig(
+                        apiKey: _apiKeyController.text.trim(),
+                        model: _selectedModel,
+                      );
+                      if (context.mounted) Navigator.pop(context);
+                    },
                   ),
                 ],
               ),

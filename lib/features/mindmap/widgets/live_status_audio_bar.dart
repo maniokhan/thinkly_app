@@ -28,16 +28,9 @@ class LiveStatusAudioBar extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12),
       padding: EdgeInsets.symmetric(horizontal: isCompact ? 10 : 14, vertical: isCompact ? 6 : 8),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black45,
-            blurRadius: 16,
-            offset: Offset(0, 4),
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: AppRadius.radiusM,
+        border: Border.all(color: AppColors.hairlineBorder, width: 1.0),
       ),
       child: isCompact
           ? _buildCompactBar(context, speech, provider)

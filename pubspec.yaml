@@ -23,6 +23,7 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.2
   intl: ^0.19.0
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
@@ -34,4 +35,16 @@ flutter:
 
   assets:
     - .env
+    - assets/fonts/
+
+  fonts:
+    - family: SpaceGrotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk-Regular.ttf
+    - family: IBMPlexSans
+      fonts:
+        - asset: assets/fonts/IBMPlexSans-Regular.ttf
+    - family: JetBrainsMono
+      fonts:
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
 

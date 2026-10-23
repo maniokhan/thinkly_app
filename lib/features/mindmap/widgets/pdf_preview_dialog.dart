@@ -3,6 +3,7 @@ import 'package:printing/printing.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/lecture_session.dart';
 import '../../../core/services/pdf_notes_service.dart';
+import '../../../core/widgets/app_loader.dart';
 
 class PdfPreviewDialog extends StatefulWidget {
   final LectureSession session;
@@ -29,9 +30,10 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
 
     return Dialog(
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border),
+      elevation: 0,
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.radiusL,
+        side: BorderSide(color: AppColors.hairlineBorder, width: 1.0),
       ),
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 10 : 24,
@@ -41,11 +43,11 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
         constraints: const BoxConstraints(maxWidth: 880, maxHeight: 840),
         child: Column(
           children: [
-            // Header (Adaptive for mobile screens)
+            // Header
             Container(
               padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 18, vertical: 12),
               decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppColors.border)),
+                border: Border(bottom: BorderSide(color: AppColors.hairlineBorder, width: 1.0)),
               ),
               child: isMobile
                   ? Column(
@@ -56,27 +58,23 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF2E1A1A),
-                                borderRadius: BorderRadius.circular(7),
-                                border: Border.all(color: const Color(0xFF4C2222)),
+                                color: AppColors.raisedSurface,
+                                borderRadius: AppRadius.radiusS,
+                                border: Border.all(color: AppColors.hairlineBorder),
                               ),
-                              child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.rose, size: 16),
+                              child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.accent, size: 16),
                             ),
                             const SizedBox(width: 8),
                             const Expanded(
                               child: Text(
                                 'Thinkly AI Study Notes • PDF Document Preview',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
+                                style: AppTypography.titleSmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                              icon: const Icon(Icons.close, size: 18, color: AppColors.secondaryText),
                               onPressed: () => Navigator.of(context).pop(),
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
@@ -91,7 +89,7 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
                             Expanded(
                               child: Text(
                                 widget.session.title,
-                                style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                                style: AppTypography.bodySmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -128,13 +126,13 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
                         Container(
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2E1A1A),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF4C2222)),
+                            color: AppColors.raisedSurface,
+                            borderRadius: AppRadius.radiusS,
+                            border: Border.all(color: AppColors.hairlineBorder),
                           ),
                           child: const Icon(
                             Icons.picture_as_pdf_rounded,
-                            color: AppColors.rose,
+                            color: AppColors.accent,
                             size: 20,
                           ),
                         ),
@@ -145,18 +143,12 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
                             children: [
                               const Text(
                                 'Thinkly AI Study Notes • PDF Document Preview',
-                                style: TextStyle(
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
+                                style: AppTypography.titleMedium,
                               ),
+                              const SizedBox(height: 2),
                               Text(
                                 widget.session.title,
-                                style: const TextStyle(
-                                  fontSize: 11.5,
-                                  color: AppColors.textSecondary,
-                                ),
+                                style: AppTypography.bodySmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -177,26 +169,28 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
                                     if (mounted) setState(() => _isSharing = false);
                                   }
                                 },
-                          icon: const Icon(Icons.share_rounded, size: 14),
-                          label: const Text('Share / Save', style: TextStyle(fontSize: 12)),
+                          icon: _isSharing
+                              ? const SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.primaryText),
+                                )
+                              : const Icon(Icons.share_rounded, size: 14),
+                          label: Text(_isSharing ? 'Sharing...' : 'Share / Save'),
                         ),
                         const SizedBox(width: 8),
                         IconButton(
-                          icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                          icon: const Icon(Icons.close, size: 20, color: AppColors.secondaryText),
                           onPressed: () => Navigator.of(context).pop(),
-                          visualDensity: VisualDensity.compact,
                         ),
                       ],
                     ),
             ),
 
-            // PDF Interactive Viewer
+            // Interactive PDF View Area
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppRadius.l)),
                 child: PdfPreview(
                   build: (format) => _pdfService.generateLectureNotesPdf(
                     session: widget.session,
@@ -207,25 +201,9 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
                   canChangePageFormat: false,
                   canChangeOrientation: false,
                   canDebug: false,
-                  pdfFileName: '${widget.session.title.replaceAll(' ', '_')}_Thinkly_Notes.pdf',
-                  loadingWidget: const Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.alabaster,
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          'Synthesizing publication-grade PDF notes...',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+                  pdfFileName: '${widget.session.title.replaceAll(' ', '_')}_Notes.pdf',
+                  loadingWidget: const AppLoader(
+                    message: 'Synthesizing publication-grade notes...',
                   ),
                 ),
               ),

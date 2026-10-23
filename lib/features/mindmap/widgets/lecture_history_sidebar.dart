@@ -90,16 +90,9 @@ class LectureHistorySidebar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: isBottomSheet
-            ? const BorderRadius.vertical(top: Radius.circular(20))
-            : BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black54,
-            blurRadius: 20,
-            offset: Offset(-4, 0),
-          ),
-        ],
+            ? const BorderRadius.vertical(top: Radius.circular(AppRadius.l))
+            : AppRadius.radiusL,
+        border: Border.all(color: AppColors.hairlineBorder, width: 1.0),
       ),
       child: Column(
         mainAxisSize: isBottomSheet ? MainAxisSize.min : MainAxisSize.max,

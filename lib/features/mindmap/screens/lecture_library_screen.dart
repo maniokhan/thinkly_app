@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
+import '../../../core/widgets/app_badge.dart';
+import '../../../core/widgets/app_empty_state.dart';
 import '../providers/mind_map_provider.dart';
 import '../widgets/pdf_preview_dialog.dart';
 
@@ -40,15 +44,16 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.border),
+        elevation: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.radiusL,
+          side: BorderSide(color: AppColors.hairlineBorder, width: 1.0),
         ),
         title: const Row(
           children: [
-            Icon(Icons.add_to_photos_rounded, color: AppColors.textPrimary, size: 20),
-            SizedBox(width: 8),
-            Text('Start New Lecture', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Icon(Icons.add_to_photos_rounded, color: AppColors.primaryText, size: 20),
+            SizedBox(width: AppSpacing.s),
+            Text('Start New Lecture', style: AppTypography.titleMedium),
           ],
         ),
         content: Column(
@@ -57,13 +62,13 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
           children: [
             const Text(
               'Enter the topic or subject for this lecture session:',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: AppTypography.bodySmall,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.m),
             TextField(
               controller: titleCtrl,
               autofocus: true,
-              style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryText),
               decoration: const InputDecoration(
                 hintText: 'e.g. Distributed Systems & Raft Consensus',
               ),
@@ -71,18 +76,21 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
           ],
         ),
         actions: [
-          TextButton(
+          AppButton.ghost(
+            label: 'Cancel',
+            height: 40,
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
           ),
-          ElevatedButton(
+          const SizedBox(width: AppSpacing.s),
+          AppButton.primary(
+            label: 'Create & Open',
+            height: 40,
             onPressed: () {
               final text = titleCtrl.text.trim();
               provider.startNewLecture(text.isEmpty ? 'New Lecture Knowledge Map' : text);
               Navigator.pop(ctx);
               widget.onSelectLecture();
             },
-            child: const Text('Create & Open'),
           ),
         ],
       ),
@@ -102,43 +110,43 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: const Text(
           'Lecture Library',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+          style: AppTypography.titleMedium,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.textPrimary),
+            icon: const Icon(Icons.add_circle_outline_rounded, color: AppColors.primaryText, size: 22),
             tooltip: 'New Lecture',
             onPressed: () => _showNewLectureDialog(context, provider),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.s),
         ],
       ),
       body: Column(
         children: [
           // Search & Filter Bar
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            padding: const EdgeInsets.fromLTRB(AppSpacing.m, AppSpacing.s, AppSpacing.m, AppSpacing.s),
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _filterQuery = val.trim()),
-              style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryText),
               decoration: InputDecoration(
                 hintText: 'Search saved lectures...',
-                prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.textMuted),
+                prefixIcon: const Icon(Icons.search_rounded, size: 18, color: AppColors.secondaryText),
                 suffixIcon: _filterQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, size: 16, color: AppColors.textMuted),
+                        icon: const Icon(Icons.clear, size: 16, color: AppColors.secondaryText),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _filterQuery = '');
                         },
                       )
                     : null,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.m, vertical: 12),
               ),
             ),
           ),
@@ -146,38 +154,17 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
           // Lecture List
           Expanded(
             child: filtered.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.bookmark_outline_rounded, size: 48, color: AppColors.textMuted.withValues(alpha: 0.4)),
-                          const SizedBox(height: 12),
-                          Text(
-                            _filterQuery.isEmpty ? 'No Saved Lectures Yet' : 'No Lectures Found',
-                            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            _filterQuery.isEmpty
-                                ? 'Your classes and generated mind maps will appear here with one-click PDF export.'
-                                : 'No lecture topics match "$_filterQuery"',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () => _showNewLectureDialog(context, provider),
-                            icon: const Icon(Icons.add, size: 16),
-                            label: const Text('Start New Lecture'),
-                          ),
-                        ],
-                      ),
-                    ),
+                ? AppEmptyState(
+                    icon: Icons.bookmark_outline_rounded,
+                    title: _filterQuery.isEmpty ? 'No Saved Lectures Yet' : 'No Lectures Found',
+                    description: _filterQuery.isEmpty
+                        ? 'Your classes and generated mind maps will appear here with one-click PDF export.'
+                        : 'No lecture topics match "$_filterQuery"',
+                    actionLabel: 'Start New Lecture',
+                    onAction: () => _showNewLectureDialog(context, provider),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.m, vertical: AppSpacing.s),
                     itemCount: filtered.length,
                     itemBuilder: (context, index) {
                       final item = filtered[index];
@@ -186,12 +173,12 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
                       final takeawaysCount = item.nodes.where((n) => n.isKeyTakeaway).length;
 
                       return Container(
-                        margin: const EdgeInsets.only(bottom: 10),
+                        margin: const EdgeInsets.only(bottom: AppSpacing.s),
                         decoration: BoxDecoration(
-                          color: AppColors.card,
-                          borderRadius: BorderRadius.circular(14),
+                          color: AppColors.surface,
+                          borderRadius: AppRadius.radiusM,
                           border: Border.all(
-                            color: isActive ? AppColors.borderSelected : AppColors.border,
+                            color: isActive ? AppColors.accent : AppColors.hairlineBorder,
                             width: isActive ? 1.5 : 1.0,
                           ),
                         ),
@@ -200,9 +187,9 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
                             provider.loadLecture(item);
                             widget.onSelectLecture();
                           },
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: AppRadius.radiusM,
                           child: Padding(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(AppSpacing.m),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -212,95 +199,123 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
                                       child: Text(
                                         item.title,
                                         style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: isActive ? FontWeight.w800 : FontWeight.w700,
-                                          color: AppColors.textPrimary,
+                                          fontFamily: AppTypography.fontHeading,
+                                          fontSize: 14.5,
+                                          fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                                          color: AppColors.primaryText,
+                                          letterSpacing: -0.3,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
+                                    const SizedBox(width: AppSpacing.s),
                                     if (isActive)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.emerald.withValues(alpha: 0.15),
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: AppColors.emerald.withValues(alpha: 0.4)),
-                                        ),
-                                        child: const Text(
-                                          'ACTIVE',
-                                          style: TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.emerald),
-                                        ),
-                                      ),
+                                      const AppBadge(text: 'ACTIVE', isAccent: true),
                                   ],
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 Text(
                                   _formatDate(item.lastModified),
-                                  style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
+                                  style: AppTypography.labelSmall,
                                 ),
-                                const SizedBox(height: 10),
+                                const SizedBox(height: AppSpacing.m),
                                 Row(
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: AppColors.pillTag,
+                                        color: AppColors.raisedSurface,
                                         borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
                                       ),
                                       child: Text(
-                                        '${item.nodes.length} Concepts',
-                                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                                        '${item.nodes.length} CONCEPTS',
+                                        style: AppTypography.labelSmall.copyWith(color: AppColors.primaryText),
                                       ),
                                     ),
                                     if (notesCount > 0) ...[
                                       const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF14202A),
+                                          color: AppColors.raisedSurface,
                                           borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: const Color(0xFF1E3548)),
+                                          border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
                                         ),
                                         child: Text(
-                                          '$notesCount Notes',
-                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.nodeStudentNote),
+                                          '$notesCount NOTES',
+                                          style: AppTypography.labelSmall.copyWith(color: AppColors.accent),
                                         ),
                                       ),
                                     ],
                                     if (takeawaysCount > 0) ...[
                                       const SizedBox(width: 6),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFF261D12),
+                                          color: AppColors.raisedSurface,
                                           borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: const Color(0xFF4C381E)),
+                                          border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
                                         ),
                                         child: Text(
-                                          '$takeawaysCount Exam Keys',
-                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.amber),
+                                          '$takeawaysCount EXAM KEY',
+                                          style: AppTypography.labelSmall.copyWith(color: AppColors.statusAmber),
                                         ),
                                       ),
                                     ],
                                     const Spacer(),
+                                    // Quick PDF export button
                                     IconButton(
-                                      icon: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: AppColors.rose),
-                                      tooltip: 'Export PDF',
+                                      icon: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: AppColors.primaryText),
+                                      tooltip: 'Export PDF Document',
+                                      visualDensity: VisualDensity.compact,
                                       onPressed: () {
                                         showDialog(
                                           context: context,
                                           builder: (_) => PdfPreviewDialog(session: item),
                                         );
                                       },
-                                      visualDensity: VisualDensity.compact,
                                     ),
+                                    // Delete lecture
                                     IconButton(
-                                      icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.textMuted),
+                                      icon: const Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.secondaryText),
                                       tooltip: 'Delete Lecture',
-                                      onPressed: () => provider.deleteSavedLecture(item.id),
                                       visualDensity: VisualDensity.compact,
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            backgroundColor: AppColors.surface,
+                                            elevation: 0,
+                                            shape: const RoundedRectangleBorder(
+                                              borderRadius: AppRadius.radiusL,
+                                              side: BorderSide(color: AppColors.hairlineBorder, width: 1.0),
+                                            ),
+                                            title: const Text('Delete Lecture?', style: AppTypography.titleMedium),
+                                            content: Text(
+                                              'Are you sure you want to remove "${item.title}" from your library?',
+                                              style: AppTypography.bodyMedium,
+                                            ),
+                                            actions: [
+                                              AppButton.ghost(
+                                                label: 'Cancel',
+                                                height: 40,
+                                                onPressed: () => Navigator.pop(ctx),
+                                              ),
+                                              const SizedBox(width: AppSpacing.s),
+                                              AppButton.destructive(
+                                                label: 'Delete',
+                                                height: 40,
+                                                onPressed: () {
+                                                  provider.deleteSavedLecture(item.id);
+                                                  Navigator.pop(ctx);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
                                     ),
                                   ],
                                 ),
@@ -308,7 +323,7 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
                             ),
                           ),
                         ),
-                      );
+                      ).animate(delay: (index * 30).ms).fade(duration: 200.ms, curve: Curves.easeOut).slideY(begin: 0.05, end: 0, duration: 200.ms, curve: Curves.easeOut);
                     },
                   ),
           ),

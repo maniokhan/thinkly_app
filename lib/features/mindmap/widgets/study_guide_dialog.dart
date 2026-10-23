@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_button.dart';
 import '../providers/mind_map_provider.dart';
 import 'pdf_preview_dialog.dart';
 
@@ -24,9 +25,10 @@ class StudyGuideDialog extends StatelessWidget {
 
     return Dialog(
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.border),
+      elevation: 0,
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadius.radiusL,
+        side: BorderSide(color: AppColors.hairlineBorder, width: 1.0),
       ),
       insetPadding: EdgeInsets.symmetric(
         horizontal: isMobile ? 10 : 32,
@@ -36,14 +38,14 @@ class StudyGuideDialog extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 840, maxHeight: 760),
         child: Column(
           children: [
-            // Header (Adaptive for mobile)
+            // Header
             Container(
               padding: EdgeInsets.symmetric(
                 horizontal: isMobile ? 14 : 20,
                 vertical: isMobile ? 12 : 16,
               ),
               decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: AppColors.border)),
+                border: Border(bottom: BorderSide(color: AppColors.hairlineBorder, width: 1.0)),
               ),
               child: isMobile
                   ? Column(
@@ -54,31 +56,27 @@ class StudyGuideDialog extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: AppColors.pillTag,
-                                borderRadius: BorderRadius.circular(7),
-                                border: Border.all(color: AppColors.border),
+                                color: AppColors.raisedSurface,
+                                borderRadius: AppRadius.radiusS,
+                                border: Border.all(color: AppColors.hairlineBorder),
                               ),
                               child: const Icon(
                                 Icons.auto_stories_rounded,
-                                color: AppColors.textPrimary,
+                                color: AppColors.accent,
                                 size: 16,
                               ),
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: AppSpacing.s),
                             const Expanded(
                               child: Text(
                                 'AI Study Guide & Flashcards',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
+                                style: AppTypography.titleSmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                              icon: const Icon(Icons.close, size: 18, color: AppColors.secondaryText),
                               onPressed: () => Navigator.of(context).pop(),
                               visualDensity: VisualDensity.compact,
                               padding: EdgeInsets.zero,
@@ -93,45 +91,26 @@ class StudyGuideDialog extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 title,
-                                style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                                style: AppTypography.bodySmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const SizedBox(width: 8),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => PdfPreviewDialog(
-                                    session: provider.currentSession,
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.picture_as_pdf_rounded, size: 13),
-                              label: const Text('Export PDF', style: TextStyle(fontSize: 11)),
-                              style: ElevatedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                minimumSize: Size.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
                             OutlinedButton.icon(
                               onPressed: () {
                                 Clipboard.setData(ClipboardData(text: markdownContent));
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content: Text('Study guide copied to clipboard!'),
-                                    backgroundColor: AppColors.cardElevated,
+                                    content: Text('Study guide markdown copied to clipboard'),
                                     duration: Duration(seconds: 2),
                                   ),
                                 );
                               },
                               icon: const Icon(Icons.copy_rounded, size: 13),
-                              label: const Text('Copy MD', style: TextStyle(fontSize: 11)),
+                              label: const Text('Copy Markdown', style: TextStyle(fontSize: 11)),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
@@ -143,15 +122,15 @@ class StudyGuideDialog extends StatelessWidget {
                   : Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
+                          padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
-                            color: AppColors.pillTag,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.border),
+                            color: AppColors.raisedSurface,
+                            borderRadius: AppRadius.radiusS,
+                            border: Border.all(color: AppColors.hairlineBorder),
                           ),
                           child: const Icon(
                             Icons.auto_stories_rounded,
-                            color: AppColors.textPrimary,
+                            color: AppColors.accent,
                             size: 20,
                           ),
                         ),
@@ -160,125 +139,107 @@ class StudyGuideDialog extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'AI Lecture Study Guide & Flashcards',
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textPrimary,
-                                    ),
+                              const Text(
+                                'AI Study Guide & Flashcards',
+                                style: AppTypography.titleMedium,
                               ),
+                              const SizedBox(height: 2),
                               Text(
                                 title,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
+                                style: AppTypography.bodySmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
                         ),
-
-                        // Export to PDF Button (Primary Action)
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (_) => PdfPreviewDialog(
-                                session: provider.currentSession,
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.picture_as_pdf_rounded, size: 15),
-                          label: const Text('Export to PDF', style: TextStyle(fontSize: 12)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.alabaster,
-                            foregroundColor: AppColors.alabasterText,
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                          ),
-                        ),
-
-                        const SizedBox(width: 8),
-
-                        // Copy Markdown button
                         OutlinedButton.icon(
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: markdownContent));
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Study guide copied to clipboard!'),
-                                backgroundColor: AppColors.cardElevated,
+                                content: Text('Study guide markdown copied to clipboard'),
                                 duration: Duration(seconds: 2),
                               ),
                             );
                           },
                           icon: const Icon(Icons.copy_rounded, size: 14),
-                          label: const Text('Copy MD', style: TextStyle(fontSize: 12)),
+                          label: const Text('Copy Markdown'),
                         ),
-
                         const SizedBox(width: 8),
-
                         IconButton(
-                          icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                          icon: const Icon(Icons.close, size: 20, color: AppColors.secondaryText),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                       ],
                     ),
             ),
 
-            // Markdown Body
+            // Markdown Reading Body
             Expanded(
               child: Markdown(
                 data: markdownContent,
                 selectable: true,
-                padding: const EdgeInsets.all(22),
+                padding: EdgeInsets.all(isMobile ? 14 : 22),
                 styleSheet: MarkdownStyleSheet(
-                  p: const TextStyle(
-                    fontSize: 13.5,
-                    height: 1.6,
-                    color: AppColors.textSecondary,
-                  ),
-                  h1: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                  ),
-                  h2: const TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                  h3: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+                  p: AppTypography.bodyMedium.copyWith(color: AppColors.secondaryText, height: 1.6),
+                  h1: AppTypography.display.copyWith(fontSize: 20),
+                  h2: AppTypography.titleLarge.copyWith(fontSize: 16),
+                  h3: AppTypography.titleMedium.copyWith(fontSize: 14),
                   strong: const TextStyle(
+                    fontFamily: AppTypography.fontHeading,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                  blockquote: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontStyle: FontStyle.italic,
-                  ),
-                  blockquoteDecoration: BoxDecoration(
-                    color: AppColors.card,
-                    border: const Border(
-                      left: BorderSide(color: AppColors.borderSelected, width: 3),
-                    ),
-                    borderRadius: BorderRadius.circular(4),
+                    color: AppColors.primaryText,
                   ),
                   code: const TextStyle(
-                    fontFamily: 'monospace',
+                    fontFamily: AppTypography.fontMono,
                     fontSize: 12,
-                    color: AppColors.textPrimary,
-                    backgroundColor: AppColors.cardElevated,
+                    color: AppColors.accent,
+                    backgroundColor: AppColors.raisedSurface,
                   ),
-                  listBullet: const TextStyle(
-                    color: AppColors.textPrimary,
+                  blockquote: AppTypography.bodyMedium.copyWith(color: AppColors.secondaryText, fontStyle: FontStyle.italic),
+                  blockquoteDecoration: BoxDecoration(
+                    color: AppColors.surface,
+                    border: const Border(left: BorderSide(color: AppColors.accent, width: 2)),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                 ),
+              ),
+            ),
+
+            // Footer
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 14 : 20,
+                vertical: 12,
+              ),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: AppColors.hairlineBorder, width: 1.0)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  AppButton.ghost(
+                    label: 'Close',
+                    height: 40,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  AppButton.primary(
+                    label: 'Export as Academic PDF',
+                    icon: Icons.picture_as_pdf_rounded,
+                    height: 40,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      showDialog(
+                        context: context,
+                        builder: (_) => PdfPreviewDialog(
+                          session: provider.currentSession,
+                          customSummary: markdownContent,
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],

@@ -130,16 +130,9 @@ class _GraphCanvasState extends State<GraphCanvas> {
               bottom: 80,
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withValues(alpha: 0.94),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.border),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black45,
-                      blurRadius: 12,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
+                  color: AppColors.surface,
+                  borderRadius: AppRadius.radiusS,
+                  border: Border.all(color: AppColors.hairlineBorder, width: 1.0),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                 child: Column(
@@ -201,23 +194,14 @@ class _GraphCanvasState extends State<GraphCanvas> {
           width: nodeWidth,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: isRoot ? AppColors.cardRoot : AppColors.card,
-            borderRadius: BorderRadius.circular(12),
+            color: isRoot ? AppColors.raisedSurface : AppColors.surface,
+            borderRadius: AppRadius.radiusM,
             border: Border.all(
               color: isActiveTopic
-                  ? AppColors.emerald
-                  : (isRoot
-                      ? (isSelected ? AppColors.textPrimary : AppColors.borderRoot)
-                      : (isSelected ? AppColors.borderSelected : AppColors.border)),
-              width: isActiveTopic ? 1.8 : (isRoot ? 1.5 : (isSelected ? 1.8 : 1.0)),
+                  ? AppColors.statusLive
+                  : (isSelected ? AppColors.accent : AppColors.hairlineBorder),
+              width: isSelected || isActiveTopic ? 1.5 : 1.0,
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black45,
-                blurRadius: 8,
-                offset: Offset(0, 2),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,23 +214,18 @@ class _GraphCanvasState extends State<GraphCanvas> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.pillTag,
+                        color: AppColors.raisedSurface,
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: AppColors.emerald.withValues(alpha: 0.5)),
+                        border: Border.all(color: AppColors.statusLive),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.record_voice_over_rounded, size: 10, color: AppColors.emerald),
+                          Icon(Icons.record_voice_over_rounded, size: 10, color: AppColors.statusLive),
                           SizedBox(width: 4),
                           Text(
                             'LIVE FOCUS',
-                            style: TextStyle(
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.emerald,
-                              letterSpacing: 0.3,
-                            ),
+                            style: AppTypography.labelSmall,
                           ),
                         ],
                       ),
@@ -256,8 +235,8 @@ class _GraphCanvasState extends State<GraphCanvas> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Container(
-                          width: 6,
-                          height: 6,
+                          width: 5,
+                          height: 5,
                           decoration: BoxDecoration(
                             color: node.category.color,
                             shape: BoxShape.circle,
@@ -266,12 +245,7 @@ class _GraphCanvasState extends State<GraphCanvas> {
                         const SizedBox(width: 5),
                         Text(
                           node.category.displayName.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 8.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.4,
-                            color: AppColors.textMuted,
-                          ),
+                          style: AppTypography.labelSmall,
                         ),
                       ],
                     ),
@@ -285,14 +259,14 @@ class _GraphCanvasState extends State<GraphCanvas> {
                             margin: const EdgeInsets.only(right: 4),
                             padding: const EdgeInsets.all(2),
                             decoration: const BoxDecoration(
-                              color: AppColors.pillTag,
+                              color: AppColors.raisedSurface,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.edit_note_rounded, size: 14, color: AppColors.textPrimary),
+                            child: const Icon(Icons.edit_note_rounded, size: 14, color: AppColors.accent),
                           ),
                         ),
                       if (node.isKeyTakeaway)
-                        const Icon(Icons.star_rounded, size: 15, color: AppColors.amber),
+                        const Icon(Icons.star_rounded, size: 15, color: AppColors.statusAmber),
                     ],
                   ),
                 ],
@@ -301,10 +275,11 @@ class _GraphCanvasState extends State<GraphCanvas> {
               Text(
                 node.label,
                 style: TextStyle(
+                  fontFamily: AppTypography.fontHeading,
                   fontSize: isRoot ? 14 : 12.5,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.2,
+                  color: AppColors.primaryText,
+                  letterSpacing: -0.4,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -312,11 +287,7 @@ class _GraphCanvasState extends State<GraphCanvas> {
               const SizedBox(height: 4),
               Text(
                 node.summary,
-                style: const TextStyle(
-                  fontSize: 10.5,
-                  color: AppColors.textSecondary,
-                  height: 1.35,
-                ),
+                style: AppTypography.bodySmall,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -328,11 +299,11 @@ class _GraphCanvasState extends State<GraphCanvas> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('• ', style: TextStyle(fontSize: 10, color: AppColors.textMuted, fontWeight: FontWeight.bold)),
+                            const Text('• ', style: TextStyle(fontSize: 10, color: AppColors.secondaryText, fontWeight: FontWeight.bold)),
                             Expanded(
                               child: Text(
                                 kp,
-                                style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                                style: AppTypography.bodySmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -385,75 +356,82 @@ class _GraphCanvasState extends State<GraphCanvas> {
                 ),
               ],
               const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (node.childIds.isNotEmpty)
-                    InkWell(
-                      onTap: () => provider.toggleNodeCollapsed(node.id),
-                      borderRadius: BorderRadius.circular(4),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.pillTag,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minWidth: nodeWidth - 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (node.childIds.isNotEmpty)
+                        InkWell(
+                          onTap: () => provider.toggleNodeCollapsed(node.id),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              node.isCollapsed ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                              size: 11,
-                              color: AppColors.textPill,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.pillTag,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: AppColors.border),
                             ),
-                            const SizedBox(width: 3),
-                            Text(
-                              node.isCollapsed
-                                  ? '+ ${node.childIds.length}'
-                                  : '${node.childIds.length} sub',
-                              style: const TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPill,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox.shrink(),
-                  InkWell(
-                    onTap: provider.isExtracting
-                        ? null
-                        : () => provider.expandNodeWithAi(node.id),
-                    borderRadius: BorderRadius.circular(4),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppColors.pillTag,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.auto_awesome, size: 10, color: AppColors.textPill),
-                          SizedBox(width: 4),
-                          Text(
-                            '+ AI Expand',
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPill,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  node.isCollapsed ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                                  size: 11,
+                                  color: AppColors.textPill,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  node.isCollapsed
+                                      ? '+ ${node.childIds.length}'
+                                      : '${node.childIds.length} sub',
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPill,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      InkWell(
+                        onTap: provider.isExtracting
+                            ? null
+                            : () => provider.expandNodeWithAi(node.id),
+                        borderRadius: BorderRadius.circular(4),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: AppColors.pillTag,
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.auto_awesome, size: 10, color: AppColors.textPill),
+                              SizedBox(width: 4),
+                              Text(
+                                '+ AI Expand',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPill,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ],
           ),
