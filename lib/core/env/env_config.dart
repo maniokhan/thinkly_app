@@ -110,4 +110,6 @@ class EnvConfig extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  Future<void> resetToEnv() => resetToDefault();
 }

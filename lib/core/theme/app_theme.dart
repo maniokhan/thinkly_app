@@ -34,6 +34,15 @@ class AppColors {
   static const Color indigo = Color(0xFF6366F1);
   static const Color indigoDark = Color(0xFF1E1E2E);
 
+  // Accent Aliases
+  static const Color accentEmerald = Color(0xFF10B981);
+  static const Color accentTeal = Color(0xFF14B8A6);
+  static const Color accentAmber = Color(0xFFF59E0B);
+  static const Color accentRose = Color(0xFFF43F5E);
+  static const Color accentCyan = Color(0xFF06B6D4);
+  static const Color accentViolet = Color(0xFFA855F7);
+  static const Color accentIndigo = Color(0xFF6366F1);
+
   // Text Hierarchy
   static const Color textPrimary = Color(0xFFFAFAFA);
   static const Color textSecondary = Color(0xFFA1A1AA);
