@@ -5,11 +5,9 @@ import 'core/env/env_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/speech_service.dart';
 import 'features/mindmap/providers/mind_map_provider.dart';
-import 'features/mindmap/screens/mind_map_screen.dart';
-import 'features/mindmap/screens/pdf_notes_screen.dart';
+import 'features/mindmap/screens/lecture_capture_screen.dart';
+import 'features/mindmap/screens/lecture_results_screen.dart';
 import 'features/mindmap/screens/lecture_library_screen.dart';
-import 'features/mindmap/screens/settings_screen.dart';
-import 'widgets/top_navigation_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +38,7 @@ class ThinklyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Thinkly | AI Live Class Mind Map & PDF Notes',
+      title: 'Thinkly | AI Live Class Notes, Graphs & PDF',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       home: const ThinklyShell(),
@@ -63,27 +61,19 @@ class _ThinklyShellState extends State<ThinklyShell> {
     Widget activeScreen;
     switch (_currentIndex) {
       case 0:
-        activeScreen = const Column(
-          children: [
-            TopNavigationBar(),
-            Expanded(
-              child: MindMapScreen(),
-            ),
-          ],
+        activeScreen = LectureCaptureScreen(
+          onNavigateToResults: () => setState(() => _currentIndex = 1),
         );
         break;
       case 1:
-        activeScreen = const PdfNotesScreen();
+        activeScreen = LectureResultsScreen(
+          onBackToRecord: () => setState(() => _currentIndex = 0),
+        );
         break;
       case 2:
         activeScreen = LectureLibraryScreen(
-          onSelectLecture: () {
-            setState(() => _currentIndex = 0);
-          },
+          onSelectLecture: () => setState(() => _currentIndex = 1),
         );
-        break;
-      case 3:
-        activeScreen = const SettingsScreen();
         break;
       default:
         activeScreen = const SizedBox.shrink();
@@ -95,35 +85,38 @@ class _ThinklyShellState extends State<ThinklyShell> {
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppColors.surface,
-          border: Border(top: BorderSide(color: AppColors.hairlineBorder, width: 1.0)),
+          border: Border(
+            top: BorderSide(color: AppColors.hairlineBorder, width: 1.0),
+          ),
         ),
         child: NavigationBar(
           selectedIndex: _currentIndex,
           onDestinationSelected: (idx) => setState(() => _currentIndex = idx),
           backgroundColor: AppColors.surface,
           indicatorColor: AppColors.raisedSurface,
-          height: 60,
+          height: 62,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: const [
             NavigationDestination(
-              icon: Icon(Icons.hub_rounded, size: 20, color: AppColors.secondaryText),
-              selectedIcon: Icon(Icons.hub_rounded, size: 20, color: AppColors.accent),
-              label: 'Mind Map',
+              icon: Icon(Icons.mic_none_rounded,
+                  size: 20, color: AppColors.secondaryText),
+              selectedIcon:
+                  Icon(Icons.mic_rounded, size: 20, color: AppColors.accent),
+              label: 'Record',
             ),
             NavigationDestination(
-              icon: Icon(Icons.description_rounded, size: 20, color: AppColors.secondaryText),
-              selectedIcon: Icon(Icons.description_rounded, size: 20, color: AppColors.accent),
-              label: 'Notes',
+              icon: Icon(Icons.auto_awesome_outlined,
+                  size: 20, color: AppColors.secondaryText),
+              selectedIcon: Icon(Icons.auto_awesome_rounded,
+                  size: 20, color: AppColors.accent),
+              label: 'Results',
             ),
             NavigationDestination(
-              icon: Icon(Icons.folder_special_rounded, size: 20, color: AppColors.secondaryText),
-              selectedIcon: Icon(Icons.folder_special_rounded, size: 20, color: AppColors.accent),
-              label: 'Library',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.tune_rounded, size: 20, color: AppColors.secondaryText),
-              selectedIcon: Icon(Icons.tune_rounded, size: 20, color: AppColors.accent),
-              label: 'Config',
+              icon: Icon(Icons.folder_outlined,
+                  size: 20, color: AppColors.secondaryText),
+              selectedIcon: Icon(Icons.folder_rounded,
+                  size: 20, color: AppColors.accent),
+              label: 'Classes',
             ),
           ],
         ),

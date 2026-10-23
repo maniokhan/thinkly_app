@@ -10,6 +10,10 @@
 	<string>Thinkly</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Thinkly requires microphone access to listen to live classroom lectures and generate real-time mind maps and PDF notes.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

@@ -7,7 +7,8 @@ import 'package:thinkly_app/core/env/env_config.dart';
 import 'package:thinkly_app/core/services/speech_service.dart';
 import 'package:thinkly_app/features/mindmap/providers/mind_map_provider.dart';
 import 'package:thinkly_app/main.dart';
-import 'package:thinkly_app/features/mindmap/widgets/pdf_preview_dialog.dart';
+import 'package:thinkly_app/features/mindmap/screens/lecture_capture_screen.dart';
+import 'package:thinkly_app/features/mindmap/screens/lecture_results_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,21 +17,22 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('Thinkly End-to-End User POV smoke & interaction test', (WidgetTester tester) async {
-    // Set a generous screen size for desktop/web testing
-    tester.view.physicalSize = const Size(1280, 900);
+  testWidgets('Thinkly 3-Tap Core Flow: Record -> Stop & Analyze -> Results',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(412, 915);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() => tester.view.resetPhysicalSize());
 
     final envConfig = EnvConfig();
     final speechService = SpeechService();
+    final mindMapProvider = MindMapProvider();
 
     await tester.pumpWidget(
       MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: envConfig),
           ChangeNotifierProvider.value(value: speechService),
-          ChangeNotifierProvider(create: (_) => MindMapProvider()),
+          ChangeNotifierProvider.value(value: mindMapProvider),
         ],
         child: const ThinklyApp(),
       ),
@@ -38,60 +40,33 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // 1. Verify Top Navigation Bar & Branding
+    // 1. Verify Capture Screen branding and primary action
+    expect(find.byType(LectureCaptureScreen), findsOneWidget);
     expect(find.text('Thinkly'), findsOneWidget);
-    expect(find.text('AI CLASS NOTES'), findsOneWidget);
-    expect(find.text('Export PDF'), findsOneWidget);
-    expect(find.text('Saved'), findsOneWidget);
+    expect(find.text('Start recording'), findsOneWidget);
 
-    // 2. Verify Floating Bottom Dock controls
-    expect(find.text('Start Live Class'), findsOneWidget);
-    expect(find.text('Topic / URL'), findsOneWidget);
-    expect(find.text('Add Node'), findsOneWidget);
-    expect(find.text('PDF Notes'), findsOneWidget);
-    expect(find.text('Export'), findsOneWidget);
-    expect(find.text('Floating PiP'), findsOneWidget);
-
-    // 3. User taps "PDF Notes" button
-    await tester.tap(find.text('PDF Notes'));
+    // Tap 1: Start recording
+    await tester.tap(find.text('Start recording'));
     await tester.pump(const Duration(milliseconds: 300));
 
-    // Verify PDF Preview Dialog is presented
-    expect(find.byType(PdfPreviewDialog), findsOneWidget);
-    expect(find.text('Thinkly AI Study Notes • PDF Document Preview'), findsOneWidget);
-    expect(find.text('Share / Save'), findsOneWidget);
+    // Verify recording active state & primary action switches to "Stop & analyze"
+    expect(find.text('Stop & analyze'), findsOneWidget);
 
-    // User closes the PDF dialog
-    await tester.tap(find.byIcon(Icons.close));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(find.byType(PdfPreviewDialog), findsNothing);
-
-    // 4. User taps "Export" button to view comprehensive export options
-    await tester.tap(find.text('Export'));
+    // Tap 2: Stop & analyze
+    await tester.tap(find.text('Stop & analyze'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Export Class Notes as PDF Document'), findsOneWidget);
-    expect(find.text('View AI Study Guide & Flashcards'), findsOneWidget);
-    expect(find.text('Save Map to Local Library'), findsOneWidget);
-    expect(find.text('Copy Graph JSON'), findsOneWidget);
+    // Tap 3: Land on Results screen with Summary & Graphs & PDF
+    expect(find.byType(LectureResultsScreen), findsOneWidget);
+    expect(find.text('Make PDF'), findsOneWidget);
+    expect(find.text('Summary'), findsOneWidget);
+    expect(find.text('Graphs'), findsOneWidget);
 
-    // Close export modal by tapping barrier or back
-    await tester.tapAt(const Offset(20, 20));
+    // Switch to Graphs segment
+    await tester.tap(find.text('Graphs'));
     await tester.pumpAndSettle();
 
-    // 5. User taps "+ Add Node" button
-    await tester.tap(find.text('Add Node'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Add Manual Concept Node'), findsOneWidget);
-    await tester.enterText(find.byType(TextField).first, 'Quantum Teleportation');
-    await tester.pumpAndSettle();
-
-    // Tap "Add Node" submit button in dialog
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Add Node'));
-    await tester.pumpAndSettle();
-
-    // Verify the new concept node is reflected
-    expect(find.text('Quantum Teleportation'), findsAtLeastNWidgets(1));
+    expect(find.text('TOPIC IMPORTANCE'), findsOneWidget);
+    expect(find.text('TIMELINE & CONCEPT DEPTH'), findsOneWidget);
   });
 }

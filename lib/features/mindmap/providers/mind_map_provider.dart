@@ -9,6 +9,8 @@ import '../../../core/services/gemini_service.dart';
 import '../../../core/services/speech_service.dart';
 import '../../../core/services/web_interop.dart';
 import '../../../core/services/pdf_notes_service.dart';
+import '../../../core/services/background_capture_service.dart';
+import '../../../core/models/lecture_analysis.dart';
 import '../models/mind_map_node.dart';
 import '../models/mind_map_edge.dart';
 import '../models/lecture_session.dart';
@@ -25,9 +27,14 @@ class MindMapProvider extends ChangeNotifier {
   late LectureSession _currentSession;
   MindMapNode? _selectedNode;
   String? _activeNodeId;
+  final BackgroundCaptureService _backgroundCapture = BackgroundCaptureService();
   bool _isExtracting = false;
   bool _isGeneratingStudyGuide = false;
   bool _isGeneratingPdf = false;
+  bool _isAnalyzing = false;
+  double _analysisProgress = 0.0;
+  String _analysisStatusMessage = '';
+  String? _analysisError;
   bool _isPipArmed = true;
   bool _isAutoTitlingRoot = false;
   List<LectureSession> _savedLectures = [];
@@ -39,15 +46,21 @@ class MindMapProvider extends ChangeNotifier {
   StreamSubscription? _pipExpandSubscription;
   StreamSubscription? _pipSwitchSubscription;
   StreamSubscription? _pipPauseResumeSubscription;
+  StreamSubscription? _backgroundStopAnalyzeSubscription;
 
   LectureSession get currentSession => _currentSession;
   List<MindMapNode> get nodes => _currentSession.nodes;
   List<MindMapEdge> get edges => _currentSession.edges;
   MindMapNode? get selectedNode => _selectedNode;
   String? get activeNodeId => _activeNodeId;
+  LectureAnalysis? get currentAnalysis => _currentSession.analysis;
   bool get isExtracting => _isExtracting;
   bool get isGeneratingStudyGuide => _isGeneratingStudyGuide;
   bool get isGeneratingPdf => _isGeneratingPdf;
+  bool get isAnalyzing => _isAnalyzing;
+  double get analysisProgress => _analysisProgress;
+  String get analysisStatusMessage => _analysisStatusMessage;
+  String? get analysisError => _analysisError;
   bool get isPipArmed => _isPipArmed;
   List<LectureSession> get savedLectures => _savedLectures;
 
@@ -106,6 +119,13 @@ class MindMapProvider extends ChangeNotifier {
     _pipPauseResumeSubscription = _webInterop.onPipPauseResume.listen((_) {
       _speechService.togglePauseResume();
       _syncPipState();
+    });
+
+    // Listen for notification action 'Stop & Analyze' from Android background foreground service
+    _backgroundStopAnalyzeSubscription =
+        _backgroundCapture.onStopAndAnalyzeRequested.listen((_) {
+      _speechService.stopListening();
+      runFullAnalysis();
     });
   }
 
@@ -192,6 +212,90 @@ class MindMapProvider extends ChangeNotifier {
       nodes: [rootNode],
       edges: [],
     );
+
+    if (topicTitle == 'Zero Trust Architecture & Enterprise Defense') {
+      _currentSession.analysis = LectureAnalysis(
+        title: 'Zero Trust Architecture & Enterprise Defense',
+        summary:
+            'Zero Trust revolutionizes modern cybersecurity by eliminating implicit trust from enterprise perimeters, enforcing continuous verification, micro-segmentation, and the Principle of Least Privilege across every identity and workload.',
+        keyPoints: const [
+          AnalysisKeyPoint(
+              text:
+                  'Perimeter defense ("castle-and-moat") is obsolete against lateral traversal.',
+              timestamp: '01:15'),
+          AnalysisKeyPoint(
+              text:
+                  'Foundational tenet: "Never Trust, Always Verify" on every internal and external request.',
+              timestamp: '03:40'),
+          AnalysisKeyPoint(
+              text:
+                  'Identity serves as the primary perimeter via MFA, OAuth 2.0, and mutual TLS.',
+              timestamp: '06:12'),
+          AnalysisKeyPoint(
+              text:
+                  'Principle of Least Privilege (PoLP) enforced with Just-In-Time scoped credentials.',
+              timestamp: '09:20'),
+          AnalysisKeyPoint(
+              text:
+                  'Micro-segmentation isolates datacenter workloads, preventing lateral movement.',
+              timestamp: '12:45'),
+          AnalysisKeyPoint(
+              text:
+                  'Continuous behavioral risk analytics evaluate real-time access telemetry.',
+              timestamp: '15:30'),
+        ],
+        topics: const [
+          AnalysisTopic(
+              name: 'Identity Governance', importance: 95, mentions: 14),
+          AnalysisTopic(
+              name: 'Micro-segmentation', importance: 90, mentions: 11),
+          AnalysisTopic(
+              name: 'Least Privilege', importance: 88, mentions: 9),
+          AnalysisTopic(
+              name: 'Continuous Verification', importance: 82, mentions: 8),
+          AnalysisTopic(
+              name: 'Behavioral Telemetry', importance: 74, mentions: 6),
+        ],
+        timeline: const [
+          AnalysisTimelinePoint(
+              time: '00:00',
+              label: 'Castle-and-Moat Deficiencies',
+              value: 35),
+          AnalysisTimelinePoint(
+              time: '04:00',
+              label: 'Core Philosophy & Identity Perimeter',
+              value: 70),
+          AnalysisTimelinePoint(
+              time: '08:00',
+              label: 'Least Privilege & JIT Tokens',
+              value: 85),
+          AnalysisTimelinePoint(
+              time: '12:00',
+              label: 'Micro-segmentation Implementation',
+              value: 95),
+          AnalysisTimelinePoint(
+              time: '16:00',
+              label: 'Continuous Risk ML Verification',
+              value: 90),
+        ],
+        definitions: const [
+          'Zero Trust Architecture: A security framework requiring all users, devices, and workloads to be authenticated and continuously validated.',
+          'Micro-segmentation: A method of creating secure zones in data centers and cloud environments to isolate workloads from one another.',
+          'Principle of Least Privilege (PoLP): Granting a user or entity only the bare minimum access privileges necessary to perform a task.',
+        ],
+        questions: const [
+          'Why is the traditional castle-and-moat perimeter insufficient against modern lateral enterprise attacks?',
+          'How does micro-segmentation prevent attacker traversal once an internal server is compromised?',
+          'What role does continuous real-time risk analytics play in dynamic identity authorization?',
+        ],
+        actionItems: const [
+          'Audit active directory accounts and enforce mandatory MFA with FIDO2 hardware keys.',
+          'Implement network micro-segmentation policies between database tiers and web servers.',
+          'Review JIT token expiration limits and configure automated session revocation.',
+        ],
+        analyzedAt: DateTime.now(),
+      );
+    }
 
     _selectedNode = rootNode;
     _activeNodeId = rootId;
@@ -597,11 +701,11 @@ class MindMapProvider extends ChangeNotifier {
   }
 
   /// PDF Notes Export
-  Future<void> exportPdfNotes({String? customSummary}) async {
+  Future<void> exportPdfNotes({String? customSummary, Uint8List? chartImageBytes}) async {
     _isGeneratingPdf = true;
     notifyListeners();
     try {
-      await _pdfNotesService.printOrExportPdf(_currentSession, customSummary);
+      await _pdfNotesService.printOrExportPdf(_currentSession, customSummary, chartImageBytes);
     } finally {
       _isGeneratingPdf = false;
       notifyListeners();
@@ -609,13 +713,115 @@ class MindMapProvider extends ChangeNotifier {
   }
 
   /// Share or direct download PDF
-  Future<void> sharePdfNotes({String? customSummary}) async {
+  Future<void> sharePdfNotes({String? customSummary, Uint8List? chartImageBytes}) async {
     _isGeneratingPdf = true;
     notifyListeners();
     try {
-      await _pdfNotesService.sharePdf(_currentSession, customSummary);
+      await _pdfNotesService.sharePdf(_currentSession, customSummary, chartImageBytes);
     } finally {
       _isGeneratingPdf = false;
+      notifyListeners();
+    }
+  }
+
+  /// AI Structured Lecture Analysis (Map-Reduce & Gemini Structured Schema)
+  Future<void> runFullAnalysis({String? overrideTranscript}) async {
+    if (_isAnalyzing) return;
+    _isAnalyzing = true;
+    _analysisError = null;
+    _analysisProgress = 0.1;
+    _analysisStatusMessage = 'Preparing transcript...';
+    notifyListeners();
+
+    try {
+      String transcript = overrideTranscript?.trim() ??
+          _currentSession.transcriptHistory.trim();
+
+      // If transcript history is empty, synthesize rich content from existing node concepts & takeaways
+      if (transcript.isEmpty) {
+        final buffer = StringBuffer();
+        buffer.writeln('Lecture Topic: ${_currentSession.title}');
+        for (final node in _currentSession.nodes) {
+          buffer.writeln('${node.label}: ${node.summary}');
+          for (final kp in node.keyPoints) {
+            buffer.writeln('- $kp');
+          }
+          if (node.studentNote != null && node.studentNote!.isNotEmpty) {
+            buffer.writeln('Note: ${node.studentNote}');
+          }
+        }
+        transcript = buffer.toString().trim();
+      }
+
+      if (transcript.isEmpty) {
+        transcript =
+            'Foundational principles and architecture paradigms for ${_currentSession.title}.';
+      }
+
+      final analysis = await _gemini.analyzeLectureTranscript(
+        transcript: transcript,
+        fallbackTitle: _currentSession.title,
+        onProgress: (progress, message) {
+          _analysisProgress = progress;
+          _analysisStatusMessage = message;
+          notifyListeners();
+        },
+      );
+
+      _currentSession.analysis = analysis;
+      if (_currentSession.title == 'Listening for Lecture Topic...' ||
+          _currentSession.title == 'New Lecture Session' ||
+          _currentSession.title == 'Zero Trust Architecture & Enterprise Defense') {
+        if (analysis.title.isNotEmpty &&
+            analysis.title != 'Lecture Analysis') {
+          _currentSession.title = analysis.title;
+          if (_currentSession.nodes.isNotEmpty &&
+              _currentSession.nodes.first.category == NodeCategory.root) {
+            _currentSession.nodes.first.label = analysis.title;
+            _currentSession.nodes.first.summary = analysis.summary;
+          }
+        }
+      }
+
+      await saveCurrentLecture();
+      _analysisStatusMessage = 'Analysis complete!';
+      _analysisProgress = 1.0;
+    } catch (e) {
+      _analysisError = 'Analysis could not be completed: $e';
+      debugPrint('[MindMapProvider] Error during analysis: $e');
+    } finally {
+      _isAnalyzing = false;
+      notifyListeners();
+    }
+  }
+
+  /// YouTube Lecture Shortcut (Extracts captions & analyzes instantly)
+  Future<void> importAndAnalyzeYouTube(String url) async {
+    _isAnalyzing = true;
+    _analysisProgress = 0.15;
+    _analysisStatusMessage = 'Extracting YouTube captions & audio...';
+    _analysisError = null;
+    notifyListeners();
+
+    try {
+      final data = await _backgroundCapture.extractYouTubeLecture(url);
+      final title = data['title']?.toString() ?? 'YouTube Lecture';
+      final transcript = data['transcript']?.toString() ?? '';
+
+      // Initialize lecture session with extracted title
+      startNewLecture(title);
+      _currentSession.transcriptHistory = transcript;
+
+      _analysisStatusMessage = 'Analyzing extracted class content...';
+      _analysisProgress = 0.4;
+      notifyListeners();
+
+      await runFullAnalysis(overrideTranscript: transcript);
+    } catch (e) {
+      _analysisError = 'Failed to extract YouTube lecture: $e';
+      debugPrint('[MindMapProvider] YouTube import error: $e');
+    } finally {
+      _isAnalyzing = false;
       notifyListeners();
     }
   }
@@ -814,6 +1020,8 @@ class MindMapProvider extends ChangeNotifier {
     _pipExpandSubscription?.cancel();
     _pipSwitchSubscription?.cancel();
     _pipPauseResumeSubscription?.cancel();
+    _backgroundStopAnalyzeSubscription?.cancel();
+    _backgroundCapture.stopAutosaveLoop();
     super.dispose();
   }
 }

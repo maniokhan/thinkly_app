@@ -139,14 +139,18 @@ class _AppButtonState extends State<AppButton> with SingleTickerProviderStateMix
           Icon(widget.icon, size: 18, color: fgColor),
           const SizedBox(width: AppSpacing.s),
         ],
-        Text(
-          widget.label,
-          style: TextStyle(
-            fontFamily: AppTypography.fontHeading,
-            fontSize: 13.5,
-            fontWeight: FontWeight.w600,
-            letterSpacing: -0.3,
-            color: fgColor,
+        Flexible(
+          child: Text(
+            widget.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: AppTypography.fontHeading,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.3,
+              color: fgColor,
+            ),
           ),
         ),
       ],

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../core/models/lecture_analysis.dart';
 import 'mind_map_node.dart';
 import 'mind_map_edge.dart';
 
@@ -11,6 +12,7 @@ class LectureSession {
   final List<MindMapEdge> edges;
   String transcriptHistory;
   String? aiStudyGuide;
+  LectureAnalysis? analysis;
 
   LectureSession({
     required this.id,
@@ -21,6 +23,7 @@ class LectureSession {
     List<MindMapEdge>? edges,
     this.transcriptHistory = '',
     this.aiStudyGuide,
+    this.analysis,
   })  : createdAt = createdAt ?? DateTime.now(),
         lastModified = lastModified ?? DateTime.now(),
         nodes = nodes ?? [],
@@ -35,9 +38,18 @@ class LectureSession {
         'edges': edges.map((e) => e.toJson()).toList(),
         'transcriptHistory': transcriptHistory,
         'aiStudyGuide': aiStudyGuide,
+        'analysis': analysis?.toJson(),
       };
 
   factory LectureSession.fromJson(Map<String, dynamic> json) {
+    LectureAnalysis? parsedAnalysis;
+    if (json['analysis'] != null && json['analysis'] is Map) {
+      try {
+        parsedAnalysis = LectureAnalysis.fromJson(
+            Map<String, dynamic>.from(json['analysis'] as Map));
+      } catch (_) {}
+    }
+
     return LectureSession(
       id: json['id'] as String,
       title: json['title'] as String? ?? 'Untitled Lecture',
@@ -57,6 +69,7 @@ class LectureSession {
           [],
       transcriptHistory: json['transcriptHistory'] as String? ?? '',
       aiStudyGuide: json['aiStudyGuide'] as String?,
+      analysis: parsedAnalysis,
     );
   }
 

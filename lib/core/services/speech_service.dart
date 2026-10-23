@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/lecture_data.dart';
 import 'web_interop.dart';
+import 'background_capture_service.dart';
 
 enum SpeechMode {
   tabAudio,        // Google Meet / Class / YouTube Tab Audio
@@ -177,6 +178,11 @@ class SpeechService extends ChangeNotifier {
       }
     }
 
+    // Launch Android foreground service with notification
+    BackgroundCaptureService().startBackgroundCapture(
+      lectureTitle: activeSharingSourceTitle,
+    );
+
     notifyListeners();
   }
 
@@ -195,6 +201,9 @@ class SpeechService extends ChangeNotifier {
     } else if (_currentMode == SpeechMode.liveMicrophone) {
       _webInterop.stopSpeechRecognition();
     }
+
+    // Stop Android foreground service
+    BackgroundCaptureService().stopBackgroundCapture();
 
     _isPaused = false;
     notifyListeners();

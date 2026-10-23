@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,10 +7,9 @@ import 'package:thinkly_app/core/env/env_config.dart';
 import 'package:thinkly_app/core/services/speech_service.dart';
 import 'package:thinkly_app/features/mindmap/providers/mind_map_provider.dart';
 import 'package:thinkly_app/main.dart';
-import 'package:thinkly_app/features/mindmap/screens/settings_screen.dart';
+import 'package:thinkly_app/features/mindmap/screens/lecture_capture_screen.dart';
+import 'package:thinkly_app/features/mindmap/screens/lecture_results_screen.dart';
 import 'package:thinkly_app/features/mindmap/screens/lecture_library_screen.dart';
-import 'package:thinkly_app/features/mindmap/screens/pdf_notes_screen.dart';
-import 'package:thinkly_app/features/mindmap/screens/mind_map_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +18,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('Mobile Bottom Navigation Tabs - Switch between Mind Map, Notes, Library, and Config', (WidgetTester tester) async {
+  testWidgets(
+      'Mobile 3-Tab Navigation - Switch cleanly between Record, Results, and Classes',
+      (WidgetTester tester) async {
     // Pixel 9 Pro viewport (412 x 915)
     tester.view.physicalSize = const Size(412, 915);
     tester.view.devicePixelRatio = 1.0;
@@ -44,63 +44,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
 
-    // 1. Initial tab: Mind Map Canvas
-    expect(find.byType(MindMapScreen), findsOneWidget);
+    // 1. Initial Tab: Record Screen
+    expect(find.byType(LectureCaptureScreen), findsOneWidget);
     expect(find.text('Thinkly'), findsOneWidget);
-    expect(find.text('Mind Map'), findsOneWidget);
-    expect(find.text('Notes'), findsOneWidget);
-    expect(find.text('Library'), findsOneWidget);
-    expect(find.text('Config'), findsOneWidget);
+    expect(find.text('Start recording'), findsOneWidget);
+    expect(find.text('Record'), findsOneWidget);
+    expect(find.text('Results'), findsOneWidget);
+    expect(find.text('Classes'), findsOneWidget);
 
-    // 2. Tap "Library" tab
-    await tester.tap(find.text('Library'));
+    // 2. Switch to "Results" tab
+    await tester.tap(find.text('Results'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byType(LectureResultsScreen), findsOneWidget);
+    expect(find.text('Make PDF'), findsOneWidget);
+    expect(find.text('Summary'), findsOneWidget);
+    expect(find.text('Graphs'), findsOneWidget);
+
+    // Switch to Graphs sub-tab
+    await tester.tap(find.text('Graphs'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    // 3. Switch to "Classes" (Library) tab
+    await tester.tap(find.text('Classes'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.byType(LectureLibraryScreen), findsOneWidget);
     expect(find.text('Lecture Library'), findsOneWidget);
-    expect(find.text('Start New Lecture'), findsOneWidget);
 
-    // Search lectures
-    await tester.enterText(find.byType(TextField).first, 'Operating Systems');
+    // 4. Return to "Record" tab
+    await tester.tap(find.text('Record'));
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-
-    // 3. Tap "Config" tab
-    await tester.tap(find.text('Config'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.byType(SettingsScreen), findsOneWidget);
-    expect(find.text('Settings'), findsOneWidget);
-    expect(find.text('Gemini AI Engine'), findsOneWidget);
-    expect(find.text('Live Classroom Audio'), findsOneWidget);
-    expect(find.text('PDF & Notes Engine'), findsOneWidget);
-
-    // 4. Tap "Mind Map" tab to return
-    await tester.tap(find.text('Mind Map'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.byType(MindMapScreen), findsOneWidget);
-
-    // 5. Tap "Notes" tab
-    await tester.tap(find.text('Notes'));
-    // Pump frames to let view build
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(tester.takeException(), isNull);
-    expect(find.byType(PdfNotesScreen), findsOneWidget);
-    expect(find.text('Academic PDF Notes'), findsOneWidget);
-    expect(find.text('Academic Document'), findsOneWidget);
-    expect(find.text('Flashcards & Guide'), findsOneWidget);
-
-    // Switch view inside Notes to "Flashcards & Guide"
-    await tester.tap(find.text('Flashcards & Guide'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.byType(Markdown), findsOneWidget);
-
-    // Return to Mind Map
-    await tester.tap(find.text('Mind Map'));
-    await tester.pumpAndSettle();
-    expect(tester.takeException(), isNull);
-    expect(find.byType(MindMapScreen), findsOneWidget);
+    expect(find.byType(LectureCaptureScreen), findsOneWidget);
   });
 }
