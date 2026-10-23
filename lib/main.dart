@@ -1,67 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-
-import 'core/env/env_config.dart';
 import 'core/theme/app_theme.dart';
-import 'core/services/speech_service.dart';
-import 'features/mindmap/providers/mind_map_provider.dart';
-import 'features/mindmap/screens/mind_map_screen.dart';
-import 'widgets/top_navigation_bar.dart';
+import 'features/debate/providers/debate_provider.dart';
+import 'features/debate/screens/home_screen.dart';
+import 'features/mascot/controllers/mascot_controller.dart';
+import 'services/audio_service.dart';
+import 'services/gemini_live_service.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Environment (.env and SharedPreferences)
-  final envConfig = EnvConfig();
-  await envConfig.initialize();
+  // Prefer portrait orientation for optimal debate & mascot framing
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
-  // Initialize Speech Services & Web Interop
-  final speechService = SpeechService();
-  speechService.initialize();
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: envConfig),
-        ChangeNotifierProvider.value(value: speechService),
-        ChangeNotifierProvider(create: (_) => MindMapProvider()),
-      ],
-      child: const ThinklyApp(),
-    ),
-  );
+  runApp(const AIDebateApp());
 }
 
-class ThinklyApp extends StatelessWidget {
-  const ThinklyApp({super.key});
+class AIDebateApp extends StatefulWidget {
+  const AIDebateApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Thinkly | AI Live Class Mind Map & PDF Notes',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const ThinklyShell(),
+  State<AIDebateApp> createState() => _AIDebateAppState();
+}
+
+class _AIDebateAppState extends State<AIDebateApp> with WidgetsBindingObserver {
+  late final AudioService _audioService;
+  late final GeminiLiveService _geminiLiveService;
+  late final MascotController _mascotController;
+  late final DebateProvider _debateProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _audioService = AudioService();
+    _geminiLiveService = GeminiLiveService();
+    _mascotController = MascotController();
+
+    _debateProvider = DebateProvider(
+      audioService: _audioService,
+      geminiService: _geminiLiveService,
+      mascotController: _mascotController,
     );
   }
-}
 
-class ThinklyShell extends StatelessWidget {
-  const ThinklyShell({super.key});
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _audioService.pauseAudio();
+    } else if (state == AppLifecycleState.resumed) {
+      _audioService.resumeAudio();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _debateProvider.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          // Sleek 56px Top Header Bar
-          TopNavigationBar(),
-
-          // Full Workspace Mind Map Canvas & Controls
-          Expanded(
-            child: MindMapScreen(),
-          ),
-        ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<MascotController>.value(value: _mascotController),
+        ChangeNotifierProvider<DebateProvider>.value(value: _debateProvider),
+      ],
+      child: MaterialApp(
+        title: 'AI Debate Arena',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
+        home: const HomeScreen(),
       ),
     );
   }
