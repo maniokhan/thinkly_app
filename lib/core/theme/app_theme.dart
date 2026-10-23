@@ -22,7 +22,15 @@ class AppColors {
   static const Color statusLive = Color(0xFF10B981);
   static const Color statusAmber = Color(0xFFF59E0B);
 
-  // Legacy & Alias Mappings (Ensuring zero breaks across models & canvas)
+  // Legacy & Alias Mappings (Ensuring zero breaks across models, debate arena & canvas)
+  static const Color surfaceElevated = raisedSurface;
+  static const Color accentDark = Color(0xFF98CC00);
+  static const Color accentDim = Color(0x22C6FF00);
+  static const Color success = statusLive;
+  static const Color warning = statusAmber;
+  static const Color error = destructive;
+  static const Color coral = destructive;
+
   static const Color card = surface;
   static const Color cardRoot = raisedSurface;
   static const Color cardElevated = raisedSurface;
@@ -340,4 +348,7 @@ class AppTheme {
       ),
     );
   }
+
+  // Alias lightTheme to darkTheme to maintain strict matte black aesthetics
+  static ThemeData get lightTheme => darkTheme;
 }
