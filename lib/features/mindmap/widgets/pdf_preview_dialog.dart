@@ -1,0 +1,156 @@
+import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import '../../../core/theme/app_theme.dart';
+import '../models/lecture_session.dart';
+import '../../../core/services/pdf_notes_service.dart';
+
+class PdfPreviewDialog extends StatefulWidget {
+  final LectureSession session;
+  final String? customSummary;
+
+  const PdfPreviewDialog({
+    super.key,
+    required this.session,
+    this.customSummary,
+  });
+
+  @override
+  State<PdfPreviewDialog> createState() => _PdfPreviewDialogState();
+}
+
+class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
+  final PdfNotesService _pdfService = PdfNotesService();
+  bool _isSharing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppColors.border),
+      ),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 880, maxHeight: 840),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              decoration: const BoxDecoration(
+                border: Border(bottom: BorderSide(color: AppColors.border)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: AppColors.pillTag,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: const Icon(
+                      Icons.picture_as_pdf_rounded,
+                      color: AppColors.rose,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Thinkly AI Study Notes • PDF Document Preview',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          widget.session.title,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.textSecondary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _isSharing
+                        ? null
+                        : () async {
+                            setState(() => _isSharing = true);
+                            try {
+                              await _pdfService.sharePdf(
+                                widget.session,
+                                widget.customSummary,
+                              );
+                            } finally {
+                              if (mounted) setState(() => _isSharing = false);
+                            }
+                          },
+                    icon: const Icon(Icons.share_rounded, size: 15),
+                    label: const Text('Share / Save', style: TextStyle(fontSize: 12)),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                    onPressed: () => Navigator.of(context).pop(),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
+              ),
+            ),
+
+            // PDF Interactive Viewer
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+                child: PdfPreview(
+                  build: (format) => _pdfService.generateLectureNotesPdf(
+                    session: widget.session,
+                    customSummary: widget.customSummary,
+                  ),
+                  allowPrinting: true,
+                  allowSharing: true,
+                  canChangePageFormat: false,
+                  canChangeOrientation: false,
+                  canDebug: false,
+                  pdfFileName: '${widget.session.title.replaceAll(' ', '_')}_Thinkly_Notes.pdf',
+                  loadingWidget: const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.alabaster,
+                        ),
+                        SizedBox(height: 12),
+                        Text(
+                          'Synthesizing publication-grade PDF notes...',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

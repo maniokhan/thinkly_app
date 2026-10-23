@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Thinkly - AI Live Class Mind Map & PDF Notes Assistant">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Thinkly">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Thinkly | AI Class Mind Map & PDF Notes</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Fonts: Inter Tight & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,300..900;1,300..900&family=JetBrains+Mono:wght@400..700&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      background-color: #111111;
+      margin: 0;
+      padding: 0;
+      color: #F5F5F5;
+      font-family: 'Inter Tight', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+    }
+  </style>
+
+  <script>
+    // --- 1. Tab Audio Capture (YouTube Video / Google Meet Tab Audio with 6.5s Segments) ---
+    const tabAudioEngine = {
+      stream: null,
+      audioStream: null,
+      currentRecorder: null,
+      isRecording: false,
+      isPaused: false,
+      audioContext: null,
+      analyser: null,
+      volumePollTimer: null,
+
+      startCapture: async function() {
+        try {
+          let stream = window.thinklyMediaStream;
+          const isStreamValid = stream && stream.active && stream.getAudioTracks().length > 0 && stream.getAudioTracks()[0].readyState === 'live';
+
+          if (!isStreamValid) {
+            stream = await navigator.mediaDevices.getDisplayMedia({
+              video: { displaySurface: 'browser' },
+              audio: {
+                echoCancellation: false,
+                noiseSuppression: false
+              },
+              systemAudio: 'include',
+              preferCurrentTab: false
+            });
+            window.thinklyMediaStream = stream;
+          }
+
+          const audioTracks = stream.getAudioTracks();
+          if (!audioTracks || audioTracks.length === 0) {
+            stream.getTracks().forEach(t => t.stop());
+            window.thinklyMediaStream = null;
+            const errMsg = "Please check 'Also share tab audio' when selecting your YouTube or Google Meet tab.";
+            alert(errMsg);
+            window.dispatchEvent(new CustomEvent('thinkly-tab-audio-error', {
+              detail: { error: 'no-audio-track', message: errMsg }
+            }));
+            return false;
+          }
+
+          this.stream = stream;
+          this.audioStream = new MediaStream(audioTracks);
+          this.isRecording = true;
+          this.isPaused = false;
+
+          const videoTracks = stream.getVideoTracks();
+          if (videoTracks && videoTracks.length > 0) {
+            videoTracks[0].onended = () => {
+              this.stopCapture();
+            };
+          }
+          audioTracks[0].onended = () => {
+            this.stopCapture();
+          };
+
+          this.setupAudioAnalyser();
+
+          if (window.thinklyPip) {
+            window.thinklyPip.isListeningActive = true;
+          }
+
+          window.dispatchEvent(new CustomEvent('thinkly-tab-audio-status', {
+            detail: { isRecording: true }
+          }));
+
+          this.recordNextSegment();
+          return true;
+        } catch (err) {
+          console.warn('[Thinkly] getDisplayMedia error:', err);
+          window.dispatchEvent(new CustomEvent('thinkly-tab-audio-error', {
+            detail: { error: err.name || 'CaptureError', message: err.message || 'Failed to capture tab audio' }
+          }));
+          return false;
+        }
+      },
+
+      setupAudioAnalyser: function() {
+        if (!this.audioStream) return;
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          if (!this.audioContext || this.audioContext.state === 'closed') {
+            this.audioContext = new AudioContextClass();
+          }
+          if (this.audioContext.state === 'suspended') {
+            this.audioContext.resume();
+          }
+          const source = this.audioContext.createMediaStreamSource(this.audioStream);
+          const analyser = this.audioContext.createAnalyser();
+          analyser.fftSize = 64;
+          source.connect(analyser);
+          this.analyser = analyser;
+
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+          if (this.volumePollTimer) clearInterval(this.volumePollTimer);
+
+          this.volumePollTimer = setInterval(() => {
+            if (!this.isRecording || this.isPaused || !this.analyser) return;
+            analyser.getByteFrequencyData(dataArray);
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+              sum += dataArray[i];
+            }
+            const avg = sum / dataArray.length;
+            const normalized = Math.min(1.0, Math.max(0.0, avg / 128.0));
+            window.dispatchEvent(new CustomEvent('thinkly-audio-volume', {
+              detail: { volume: normalized }
+            }));
+          }, 100);
+        } catch(e) {
+          console.warn('[Thinkly] Analyser setup notice:', e);
+        }
+      },
+
+      recordNextSegment: function() {
+        if (!this.isRecording || this.isPaused || !this.audioStream) return;
+        try {
+          const supportedMime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : (MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : '');
+          const recorder = supportedMime ? new MediaRecorder(this.audioStream, { mimeType: supportedMime }) : new MediaRecorder(this.audioStream);
+          this.currentRecorder = recorder;
+          const chunks = [];
+
+          recorder.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) {
+              chunks.push(e.data);
+            }
+          };
+
+          recorder.onstop = () => {
+            if (chunks.length > 0) {
+              const blob = new Blob(chunks, { type: 'audio/webm' });
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = reader.result.split(',')[1];
+                window.dispatchEvent(new CustomEvent('thinkly-tab-audio-chunk', {
+                  detail: {
+                    base64Audio: base64,
+                    mimeType: 'audio/webm'
+                  }
+                }));
+              };
+              reader.readAsDataURL(blob);
+            }
+            if (this.isRecording && !this.isPaused) {
+              setTimeout(() => this.recordNextSegment(), 50);
+            }
+          };
+
+          recorder.start();
+          setTimeout(() => {
+            if (recorder.state === 'recording') {
+              recorder.stop();
+            }
+          }, 6500);
+        } catch(e) {
+          console.warn('[Thinkly] Segment recording error:', e);
+        }
+      },
+
+      pauseCapture: function() {
+        this.isPaused = true;
+        if (this.currentRecorder && this.currentRecorder.state === 'recording') {
+          this.currentRecorder.stop();
+        }
+        window.dispatchEvent(new CustomEvent('thinkly-tab-audio-status', {
+          detail: { isRecording: false, isPaused: true }
+        }));
+      },
+
+      resumeCapture: function() {
+        if (!this.isRecording) return;
+        this.isPaused = false;
+        window.dispatchEvent(new CustomEvent('thinkly-tab-audio-status', {
+          detail: { isRecording: true, isPaused: false }
+        }));
+        this.recordNextSegment();
+      },
+
+      stopCapture: function() {
+        this.isRecording = false;
+        this.isPaused = false;
+        if (this.volumePollTimer) {
+          clearInterval(this.volumePollTimer);
+          this.volumePollTimer = null;
+        }
+        if (this.currentRecorder && this.currentRecorder.state === 'recording') {
+          try { this.currentRecorder.stop(); } catch(e) {}
+        }
+        if (this.audioStream) {
+          this.audioStream.getTracks().forEach(t => t.stop());
+          this.audioStream = null;
+        }
+        if (this.stream) {
+          this.stream.getTracks().forEach(t => t.stop());
+          this.stream = null;
+        }
+        window.thinklyMediaStream = null;
+        if (window.thinklyPip) {
+          window.thinklyPip.isListeningActive = false;
+        }
+        window.dispatchEvent(new CustomEvent('thinkly-tab-audio-status', {
+          detail: { isRecording: false }
+        }));
+      }
+    };
+
+    window.thinklyTabAudio = tabAudioEngine;
+    window.mindArenaTabAudio = tabAudioEngine;
+
+    // --- 2. Web Speech Recognition Fallback ---
+    const speechEngine = {
+      recognition: null,
+      isListening: false,
+      isPaused: false,
+      isSupported: function() {
+        return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      },
+      startListening: function() {
+        if (!this.isSupported()) {
+          window.dispatchEvent(new CustomEvent('thinkly-speech-error', {
+            detail: { error: 'not-supported', message: 'SpeechRecognition API not supported in this browser.' } 
+          }));
+          return false;
+        }
+        var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        var r = new SpeechRec();
+        r.continuous = true;
+        r.interimResults = true;
+        r.lang = 'en-US';
+
+        r.onresult = function(event) {
+          var interim = '';
+          var final = '';
+          for (var i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              final += event.results[i][0].transcript;
+            } else {
+              interim += event.results[i][0].transcript;
+            }
+          }
+          window.dispatchEvent(new CustomEvent('thinkly-speech-result', {
+            detail: { interim: interim, final: final, isFinal: final.length > 0 }
+          }));
+        };
+
+        r.onerror = function(event) {
+          window.dispatchEvent(new CustomEvent('thinkly-speech-error', {
+            detail: { error: event.error, message: event.message || event.error }
+          }));
+        };
+
+        r.onend = () => {
+          if (this.isListening && !this.isPaused) {
+            try { r.start(); } catch(e) {}
+          }
+        };
+
+        try {
+          r.start();
+          this.recognition = r;
+          this.isListening = true;
+          this.isPaused = false;
+          return true;
+        } catch(e) {
+          return false;
+        }
+      },
+      stopListening: function() {
+        this.isListening = false;
+        this.isPaused = false;
+        if (this.recognition) {
+          try { this.recognition.stop(); } catch(e) {}
+        }
+      },
+      pauseListening: function() {
+        this.isPaused = true;
+        if (this.recognition) {
+          try { this.recognition.stop(); } catch(e) {}
+        }
+      },
+      resumeListening: function() {
+        if (!this.isListening) return;
+        this.isPaused = false;
+        if (this.recognition) {
+          try { this.recognition.start(); } catch(e) {}
+        }
+      }
+    };
+
+    window.thinklySpeech = speechEngine;
+    window.mindArenaSpeech = speechEngine;
+
+    // --- 3. Picture-in-Picture Companion Engine ---
+    const pipEngine = {
+      pipWindow: null,
+      autoPipEnabled: true,
+      isListeningActive: false,
+      state: {
+        isListening: false,
+        meetingBadge: 'Class Audio Active',
+        transcript: 'Listening to lecture audio...',
+        latestNode: 'Topic',
+        nodeCount: 1,
+        importantCount: 0,
+        lectures: [],
+        activeLectureId: ''
+      },
+
+      openExternalPip: async function() {
+        if (this.pipWindow && !this.pipWindow.closed) {
+          try { this.pipWindow.focus(); } catch(e) {}
+          return true;
+        }
+        var pip = null;
+        if ('documentPictureInPicture' in window) {
+          try {
+            pip = await window.documentPictureInPicture.requestWindow({
+              width: 360,
+              height: 400
+            });
+          } catch(e) {
+            console.warn('[Thinkly] documentPictureInPicture fallback:', e);
+          }
+        }
+        if (!pip) {
+          var left = Math.max(10, window.screen.availWidth - 380);
+          pip = window.open('', 'Thinkly_PiP', 'width=360,height=400,top=120,left=' + left + ',menubar=no,toolbar=no,location=no,status=no,resizable=yes');
+        }
+        if (!pip) return false;
+        this.pipWindow = pip;
+        this.renderPipDom(pip);
+        window.dispatchEvent(new CustomEvent('thinkly-pip-opened', {}));
+        return true;
+      },
+
+      renderPipDom: function(pip) {
+        var doc = pip.document;
+        doc.title = 'Thinkly Companion';
+        var style = doc.createElement('style');
+        style.textContent = `
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body {
+            background-color: #121212;
+            color: #F5F5F5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 14px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            user-select: none;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #282828;
+            margin-bottom: 10px;
+          }
+          .title { font-weight: 800; font-size: 13px; letter-spacing: -0.3px; color: #FFFFFF; }
+          .badge { font-size: 10px; background: #222; padding: 2px 6px; border-radius: 4px; color: #10B981; font-weight: 700; }
+          .topic { font-size: 12.5px; font-weight: 700; color: #EDEDED; margin-bottom: 6px; }
+          .caption { background: #181818; border: 1px solid #262626; border-radius: 8px; padding: 10px; font-size: 11.5px; color: #A3A3A3; height: 90px; overflow-y: auto; line-height: 1.4; margin-bottom: 10px; }
+          .btn-row { display: flex; gap: 6px; margin-bottom: 10px; }
+          .btn { flex: 1; background: #262626; border: 1px solid #383838; color: #F5F5F5; padding: 7px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; text-align: center; }
+          .btn:hover { background: #333; }
+          .btn-primary { background: #EDEDED; color: #121212; border: none; }
+          .input-row { display: flex; gap: 6px; }
+          .input { flex: 1; background: #181818; border: 1px solid #333; color: #FFF; padding: 7px 10px; border-radius: 6px; font-size: 11.5px; outline: none; }
+          .input:focus { border-color: #666; }
+        `;
+        doc.head.appendChild(style);
+
+        doc.body.innerHTML = `
+          <div class="header">
+            <span class="title">⚡ THINKLY COMPANION</span>
+            <span class="badge" id="pip-badge">ACTIVE</span>
+          </div>
+          <div class="topic" id="pip-topic">${this.state.latestNode}</div>
+          <div class="caption" id="pip-caption">${this.state.transcript}</div>
+          <div class="btn-row">
+            <button class="btn" id="pip-flag">⭐ Key Point</button>
+            <button class="btn" id="pip-expand">✨ AI Expand</button>
+            <button class="btn" id="pip-pause">⏸ Pause</button>
+          </div>
+          <div class="input-row">
+            <input class="input" id="pip-input" placeholder="Quick note to current node..." />
+            <button class="btn btn-primary" id="pip-send" style="flex: 0 0 54px;">Save</button>
+          </div>
+        `;
+
+        var flagBtn = doc.getElementById('pip-flag');
+        var expandBtn = doc.getElementById('pip-expand');
+        var pauseBtn = doc.getElementById('pip-pause');
+        var sendBtn = doc.getElementById('pip-send');
+        var inputEl = doc.getElementById('pip-input');
+
+        flagBtn.onclick = () => window.dispatchEvent(new CustomEvent('thinkly-pip-flag', {}));
+        expandBtn.onclick = () => window.dispatchEvent(new CustomEvent('thinkly-pip-expand', {}));
+        pauseBtn.onclick = () => window.dispatchEvent(new CustomEvent('thinkly-pip-pause-resume', {}));
+        sendBtn.onclick = () => {
+          var val = inputEl.value.trim();
+          if (val) {
+            window.dispatchEvent(new CustomEvent('thinkly-pip-quicknote', { detail: { note: val } }));
+            inputEl.value = '';
+          }
+        };
+
+        pip.onbeforeunload = () => {
+          this.pipWindow = null;
+          window.dispatchEvent(new CustomEvent('thinkly-pip-closed', {}));
+        };
+      },
+
+      updatePipState: function(newState) {
+        Object.assign(this.state, newState);
+        if (!this.pipWindow || this.pipWindow.closed) return;
+        try {
+          var doc = this.pipWindow.document;
+          var tEl = doc.getElementById('pip-topic');
+          var cEl = doc.getElementById('pip-caption');
+          if (tEl && this.state.latestNode) tEl.textContent = this.state.latestNode;
+          if (cEl && this.state.transcript) cEl.textContent = this.state.transcript;
+        } catch(e) {}
+      },
+
+      closePip: function() {
+        if (this.pipWindow && !this.pipWindow.closed) {
+          try { this.pipWindow.close(); } catch(e) {}
+        }
+        this.pipWindow = null;
+      }
+    };
+
+    window.thinklyPip = pipEngine;
+    window.mindArenaPip = pipEngine;
+
+    // --- 4. Auto-Companion PiP on Tab Blur / Switch (Like Google Meet) ---
+    document.addEventListener('visibilitychange', async function() {
+      if (document.hidden && window.thinklyPip.isListeningActive && window.thinklyPip.autoPipEnabled) {
+        if (!window.thinklyPip.pipWindow || window.thinklyPip.pipWindow.closed) {
+          await window.thinklyPip.openExternalPip();
+        }
+      } else if (!document.hidden && window.thinklyPip.autoPipEnabled) {
+        if (window.thinklyPip.pipWindow && !window.thinklyPip.pipWindow.closed) {
+          window.thinklyPip.closePip();
+        }
+      }
+    });
+
+    window.addEventListener('blur', async function() {
+      if (window.thinklyPip.isListeningActive && window.thinklyPip.autoPipEnabled) {
+        setTimeout(async function() {
+          if ((document.hidden || !document.hasFocus()) && (!window.thinklyPip.pipWindow || window.thinklyPip.pipWindow.closed)) {
+            await window.thinklyPip.openExternalPip();
+          }
+        }, 200);
+      }
+    });
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</head>
+<body>
+</body>
+</html>
