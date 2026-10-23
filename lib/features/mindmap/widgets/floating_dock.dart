@@ -14,137 +14,150 @@ class FloatingDock extends StatelessWidget {
 
   void _showAudioModePicker(BuildContext context) {
     final speech = context.read<SpeechService>();
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) {
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(ctx).size.height * 0.85,
-            maxWidth: 620,
-          ),
-          margin: const EdgeInsets.all(16),
-          child: Material(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black54,
-                    blurRadius: 24,
-                    offset: Offset(0, 8),
-                  ),
-                ],
+    Widget content = Container(
+      constraints: const BoxConstraints(maxWidth: 580),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(isMobile ? 24 : 16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle for mobile sheet
+          if (isMobile)
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.borderRoot,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.hub_rounded, color: AppColors.alabaster, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'Start Live Class • Select Input Mode',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
-                        onPressed: () => Navigator.pop(ctx),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Choose how Thinkly captures your lecture to generate real-time mind maps & PDF notes:',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Flexible(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildModeOptionTile(
-                            ctx: ctx,
-                            title: 'Share YouTube / Meet Tab Audio',
-                            subtitle: 'Captures live audio stream directly from any YouTube video or Google Meet lecture tab.',
-                            icon: Icons.tab_rounded,
-                            badge: 'LIVE TAB AUDIO',
-                            badgeColor: AppColors.textPrimary,
-                            onTap: () {
-                              Navigator.pop(ctx);
-                              final provider = context.read<MindMapProvider>();
-                              provider.startLiveLectureSession();
-                              speech.setMode(SpeechMode.tabAudio);
-                              speech.startListening();
-                            },
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          _buildModeOptionTile(
-                            ctx: ctx,
-                            title: 'Live Classroom Microphone',
-                            subtitle: 'Continuously transcribes instructor speech in an in-person physical classroom or seminar.',
-                            icon: Icons.mic_external_on_rounded,
-                            badge: 'IN-PERSON MIC',
-                            badgeColor: AppColors.cyan,
-                            onTap: () {
-                              Navigator.pop(ctx);
-                              final provider = context.read<MindMapProvider>();
-                              provider.startLiveLectureSession();
-                              speech.setMode(SpeechMode.liveMicrophone);
-                              speech.startListening();
-                            },
-                          ),
-
-                          const SizedBox(height: 10),
-
-                          _buildModeOptionTile(
-                            ctx: ctx,
-                            title: 'Simulated University Lecture (Instant Demo)',
-                            subtitle: 'Instant offline live simulation: ${speech.selectedLecture.topic} (${speech.selectedLecture.course}).',
-                            icon: Icons.school_rounded,
-                            badge: 'INSTANT DEMO',
-                            badgeColor: AppColors.emerald,
-                            onTap: () {
-                              Navigator.pop(ctx);
-                              final provider = context.read<MindMapProvider>();
-                              provider.startNewLecture(speech.selectedLecture.topic);
-                              speech.setMode(SpeechMode.simulation);
-                              speech.startListening();
-                            },
-                          ),
-                        ],
+            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: Row(
+                  children: [
+                    Icon(Icons.mic_rounded, color: AppColors.alabaster, size: 20),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Select Audio Source',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                onPressed: () => Navigator.pop(context),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Choose how Thinkly captures your lecture to generate real-time mind maps & PDF notes:',
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 16),
+
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildModeOptionTile(
+                    ctx: context,
+                    title: 'Share YouTube / Meet Tab Audio',
+                    subtitle: 'Captures live audio directly from any YouTube video or Google Meet lecture tab.',
+                    icon: Icons.tab_rounded,
+                    badge: 'LIVE TAB AUDIO',
+                    badgeColor: AppColors.cyan,
+                    onTap: () {
+                      Navigator.pop(context);
+                      final provider = context.read<MindMapProvider>();
+                      provider.startLiveLectureSession();
+                      speech.setMode(SpeechMode.tabAudio);
+                      speech.startListening();
+                    },
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  _buildModeOptionTile(
+                    ctx: context,
+                    title: 'Live Classroom Microphone',
+                    subtitle: 'Continuously transcribes instructor speech in an in-person physical classroom or hall.',
+                    icon: Icons.mic_external_on_rounded,
+                    badge: 'IN-PERSON MIC',
+                    badgeColor: AppColors.emerald,
+                    onTap: () {
+                      Navigator.pop(context);
+                      final provider = context.read<MindMapProvider>();
+                      provider.startLiveLectureSession();
+                      speech.setMode(SpeechMode.liveMicrophone);
+                      speech.startListening();
+                    },
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  _buildModeOptionTile(
+                    ctx: context,
+                    title: 'Simulated University Lecture (Instant Demo)',
+                    subtitle: 'Instant offline live simulation: ${speech.selectedLecture.topic} (${speech.selectedLecture.course}).',
+                    icon: Icons.school_rounded,
+                    badge: 'INSTANT DEMO',
+                    badgeColor: AppColors.amber,
+                    onTap: () {
+                      Navigator.pop(context);
+                      final provider = context.read<MindMapProvider>();
+                      provider.startNewLecture(speech.selectedLecture.topic);
+                      speech.setMode(SpeechMode.simulation);
+                      speech.startListening();
+                    },
                   ),
                 ],
               ),
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
+
+    if (isMobile) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => content,
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: content,
+        ),
+      );
+    }
   }
 
   Widget _buildModeOptionTile({
@@ -158,27 +171,27 @@ class FloatingDock extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: AppColors.border),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
                 color: AppColors.pillTag,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppColors.border),
               ),
-              child: Icon(icon, color: AppColors.textPrimary, size: 20),
+              child: Icon(icon, color: AppColors.textPrimary, size: 18),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,16 +199,21 @@ class FloatingDock extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
                           color: AppColors.pillTag,
                           borderRadius: BorderRadius.circular(4),
@@ -204,10 +222,10 @@ class FloatingDock extends StatelessWidget {
                         child: Text(
                           badge,
                           style: TextStyle(
-                            fontSize: 9,
+                            fontSize: 8.5,
                             fontWeight: FontWeight.w800,
                             color: badgeColor,
-                            letterSpacing: 0.4,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ),
@@ -217,9 +235,9 @@ class FloatingDock extends StatelessWidget {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontSize: 11.5,
+                      fontSize: 11,
                       color: AppColors.textSecondary,
-                      height: 1.35,
+                      height: 1.3,
                     ),
                   ),
                 ],
@@ -237,385 +255,484 @@ class FloatingDock extends StatelessWidget {
     final summaryController = TextEditingController();
     NodeCategory selectedCategory = NodeCategory.coreConcept;
     bool isTakeaway = false;
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setState) {
-          return Dialog(
-            backgroundColor: AppColors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: const BorderSide(color: AppColors.border),
-            ),
-            child: Container(
-              width: 440,
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Add Manual Concept Node',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Manually add a concept or teacher note to the active branch.',
-                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: titleController,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                    decoration: const InputDecoration(
-                      labelText: 'Concept Title',
-                      hintText: 'e.g. Asymmetric Cryptography',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: summaryController,
-                    maxLines: 2,
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                    decoration: const InputDecoration(
-                      labelText: 'Explanation / Summary',
-                      hintText: 'Core mechanism or operational nuance...',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Text('Category: ', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      const SizedBox(width: 8),
-                      DropdownButton<NodeCategory>(
-                        value: selectedCategory,
-                        dropdownColor: AppColors.surface,
-                        items: NodeCategory.values
-                            .where((c) => c != NodeCategory.root)
-                            .map((c) => DropdownMenuItem(
-                                  value: c,
-                                  child: Text(c.displayName, style: const TextStyle(fontSize: 12)),
-                                ))
-                            .toList(),
-                        onChanged: (cat) {
-                          if (cat != null) setState(() => selectedCategory = cat);
-                        },
-                      ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: isTakeaway,
-                        activeColor: AppColors.alabaster,
-                        checkColor: AppColors.alabasterText,
-                        onChanged: (v) => setState(() => isTakeaway = v ?? false),
-                      ),
-                      const Text(
-                        'Flag as Exam Key Takeaway',
-                        style: TextStyle(fontSize: 12, color: AppColors.textPrimary),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          if (titleController.text.trim().isEmpty) return;
-                          provider.addManualNode(
-                            title: titleController.text.trim(),
-                            summary: summaryController.text.trim().isNotEmpty
-                                ? summaryController.text.trim()
-                                : null,
-                            category: selectedCategory,
-                            isKeyTakeaway: isTakeaway,
-                          );
-                          Navigator.pop(ctx);
-                        },
-                        child: const Text('Add Node'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  void _showGenerateFromTopicDialog(BuildContext context) {
-    final provider = context.read<MindMapProvider>();
-    final controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: AppColors.border),
-        ),
-        child: Container(
-          width: 460,
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.video_library_rounded, color: AppColors.rose, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'Generate from YouTube / Topic',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Enter any YouTube video lecture URL or academic topic to synthesize an instant knowledge graph & notes:',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: controller,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
-                decoration: const InputDecoration(
-                  hintText: 'e.g. Distributed Consensus & Paxos Protocol',
-                  prefixIcon: Icon(Icons.link_rounded, size: 18, color: AppColors.textSecondary),
-                ),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Cancel'),
-                  ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final text = controller.text.trim();
-                      if (text.isEmpty) return;
-                      Navigator.pop(ctx);
-                      provider.generateFromYoutubeOrTopic(text);
-                    },
-                    icon: const Icon(Icons.auto_awesome, size: 14),
-                    label: const Text('Generate Map'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showSaveAndExportMenu(BuildContext context) {
-    final provider = context.read<MindMapProvider>();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (ctx) {
+    Widget content = StatefulBuilder(
+      builder: (context, setState) {
         return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(ctx).size.height * 0.85,
-            maxWidth: 620,
-          ),
-          margin: const EdgeInsets.all(16),
-          child: Material(
+          constraints: const BoxConstraints(maxWidth: 480),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAlias,
-            child: Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black54,
-                    blurRadius: 24,
-                    offset: Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF2E1A1A),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFF4C2222)),
-                              ),
-                              child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.rose, size: 20),
-                            ),
-                            title: const Text(
-                              'Export Class Notes as PDF Document',
-                              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
-                            ),
-                            subtitle: const Text(
-                              'Generates a formatted academic PDF with summary, concepts, student notes, and flashcards.',
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                            ),
-                            trailing: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.pillTag,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text('PDF', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.rose)),
-                            ),
-                            onTap: () {
-                              Navigator.pop(ctx);
-                              showDialog(
-                                context: context,
-                                builder: (_) => PdfPreviewDialog(
-                                  session: provider.currentSession,
-                                ),
-                              );
-                            },
-                          ),
-
-                          const Divider(color: AppColors.border),
-
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.pillTag,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: const Icon(Icons.auto_stories_rounded, color: AppColors.alabaster, size: 20),
-                            ),
-                            title: const Text(
-                              'View AI Study Guide & Flashcards',
-                              style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                            ),
-                            subtitle: const Text(
-                              'Gemini synthesizes knowledge graph + notes into interactive markdown flashcards.',
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                            ),
-                            onTap: () async {
-                              Navigator.pop(ctx);
-                              final guide = await provider.generateStudyGuide();
-                              if (context.mounted) {
-                                showDialog(
-                                  context: context,
-                                  builder: (_) => StudyGuideDialog(
-                                    title: provider.currentSession.title,
-                                    markdownContent: guide,
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-
-                          const Divider(color: AppColors.border),
-
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF14241B),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFF1E3B2C)),
-                              ),
-                              child: const Icon(Icons.bookmark_add_rounded, color: AppColors.emerald, size: 20),
-                            ),
-                            title: const Text(
-                              'Save Map to Local Library',
-                              style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                            ),
-                            subtitle: const Text(
-                              'Saves graph, hierarchy, and student notes to device storage.',
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
-                            ),
-                            onTap: () async {
-                              Navigator.pop(ctx);
-                              await provider.saveCurrentLecture();
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Mind Map successfully saved to library!'),
-                                    backgroundColor: AppColors.cardElevated,
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            },
-                          ),
-
-                          const Divider(color: AppColors.border),
-
-                          ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.pillTag,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: const Icon(Icons.code_rounded, color: AppColors.cyan, size: 20),
-                            ),
-                            title: const Text('Copy Graph JSON', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
-                            subtitle: const Text('Export raw graph data structure to clipboard.', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                            onTap: () {
-                              Navigator.pop(ctx);
-                              final jsonStr = const JsonEncoder.withIndent('  ').convert(provider.currentSession.toJson());
-                              Clipboard.setData(ClipboardData(text: jsonStr));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Mind Map JSON copied to clipboard!'),
-                                  backgroundColor: AppColors.cardElevated,
-                                  duration: Duration(seconds: 2),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
+            borderRadius: BorderRadius.circular(isMobile ? 20 : 14),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (isMobile)
+                  Center(
+                    child: Container(
+                      width: 36,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.borderRoot,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                   ),
-                ],
-              ),
+                const Row(
+                  children: [
+                    Icon(Icons.add_circle_outline_rounded, color: AppColors.textPrimary, size: 20),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Add Manual Concept Node',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Add a concept or instructor note to the active branch.',
+                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: titleController,
+                  autofocus: true,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                  decoration: const InputDecoration(
+                    labelText: 'Concept Title',
+                    hintText: 'e.g. Asymmetric Cryptography',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: summaryController,
+                  maxLines: 2,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                  decoration: const InputDecoration(
+                    labelText: 'Explanation / Summary',
+                    hintText: 'Core mechanism or key takeaway...',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Category: ', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const SizedBox(width: 6),
+                        DropdownButton<NodeCategory>(
+                          value: selectedCategory,
+                          dropdownColor: AppColors.card,
+                          underline: const SizedBox.shrink(),
+                          items: NodeCategory.values
+                              .where((c) => c != NodeCategory.root)
+                              .map((c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(c.displayName, style: const TextStyle(fontSize: 12)),
+                                  ))
+                              .toList(),
+                          onChanged: (cat) {
+                            if (cat != null) setState(() => selectedCategory = cat);
+                          },
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Checkbox(
+                          value: isTakeaway,
+                          activeColor: AppColors.alabaster,
+                          checkColor: AppColors.alabasterText,
+                          onChanged: (v) => setState(() => isTakeaway = v ?? false),
+                        ),
+                        const Flexible(
+                          child: Text(
+                            'Flag as Exam Key Takeaway',
+                            style: TextStyle(fontSize: 12, color: AppColors.textPrimary),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (titleController.text.trim().isEmpty) return;
+                        provider.addManualNode(
+                          title: titleController.text.trim(),
+                          summary: summaryController.text.trim().isNotEmpty
+                              ? summaryController.text.trim()
+                              : null,
+                          category: selectedCategory,
+                          isKeyTakeaway: isTakeaway,
+                        );
+                        Navigator.pop(context);
+                      },
+                      child: const Text('Add Node'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         );
       },
     );
+
+    if (isMobile) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 12,
+            left: 12,
+            right: 12,
+            top: 12,
+          ),
+          child: content,
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: content,
+        ),
+      );
+    }
+  }
+
+  void _showGenerateFromTopicDialog(BuildContext context) {
+    final provider = context.read<MindMapProvider>();
+    final controller = TextEditingController();
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    Widget content = Container(
+      constraints: const BoxConstraints(maxWidth: 480),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(isMobile ? 20 : 14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isMobile)
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: AppColors.borderRoot,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          const Row(
+            children: [
+              Icon(Icons.video_library_rounded, color: AppColors.rose, size: 20),
+              SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Generate from YouTube / Topic',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Enter any YouTube lecture URL or academic topic to synthesize an instant knowledge graph & notes:',
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: controller,
+            autofocus: true,
+            style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+            decoration: const InputDecoration(
+              hintText: 'e.g. Distributed Consensus & Paxos Protocol',
+              prefixIcon: Icon(Icons.link_rounded, size: 18, color: AppColors.textSecondary),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            alignment: WrapAlignment.end,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  final text = controller.text.trim();
+                  if (text.isEmpty) return;
+                  Navigator.pop(context);
+                  provider.generateFromYoutubeOrTopic(text);
+                },
+                icon: const Icon(Icons.auto_awesome, size: 14),
+                label: const Text('Generate Map'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (isMobile) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 12,
+            left: 12,
+            right: 12,
+            top: 12,
+          ),
+          child: content,
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: content,
+        ),
+      );
+    }
+  }
+
+  void _showSaveAndExportMenu(BuildContext context) {
+    final provider = context.read<MindMapProvider>();
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    Widget content = Material(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(isMobile ? 24 : 16),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 580),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(isMobile ? 24 : 16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+          if (isMobile)
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.borderRoot,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2E1A1A),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF4C2222)),
+              ),
+              child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.rose, size: 18),
+            ),
+            title: const Text(
+              'Export Class Notes as PDF Document',
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary),
+            ),
+            subtitle: const Text(
+              'Generates a formatted academic PDF with summary, concepts, student notes, and flashcards.',
+              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            ),
+            trailing: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.pillTag,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text('PDF', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.rose)),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              showDialog(
+                context: context,
+                builder: (_) => PdfPreviewDialog(
+                  session: provider.currentSession,
+                ),
+              );
+            },
+          ),
+
+          const Divider(color: AppColors.border, height: 1),
+
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.pillTag,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Icon(Icons.auto_stories_rounded, color: AppColors.alabaster, size: 18),
+            ),
+            title: const Text(
+              'View AI Study Guide & Flashcards',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textPrimary),
+            ),
+            subtitle: const Text(
+              'Gemini synthesizes knowledge graph + notes into interactive markdown flashcards.',
+              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              final guide = await provider.generateStudyGuide();
+              if (context.mounted) {
+                showDialog(
+                  context: context,
+                  builder: (_) => StudyGuideDialog(
+                    title: provider.currentSession.title,
+                    markdownContent: guide,
+                  ),
+                );
+              }
+            },
+          ),
+
+          const Divider(color: AppColors.border, height: 1),
+
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF14241B),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF1E3B2C)),
+              ),
+              child: const Icon(Icons.bookmark_add_rounded, color: AppColors.emerald, size: 18),
+            ),
+            title: const Text(
+              'Save Map to Local Library',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textPrimary),
+            ),
+            subtitle: const Text(
+              'Saves graph, hierarchy, and student notes to device storage.',
+              style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              await provider.saveCurrentLecture();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Mind Map successfully saved to library!'),
+                    backgroundColor: AppColors.cardElevated,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+          ),
+
+          const Divider(color: AppColors.border, height: 1),
+
+          ListTile(
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.pillTag,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Icon(Icons.code_rounded, color: AppColors.cyan, size: 18),
+            ),
+            title: const Text('Copy Graph JSON', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.textPrimary)),
+            subtitle: const Text('Export raw graph data structure to clipboard.', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            onTap: () {
+              Navigator.pop(context);
+              final jsonStr = const JsonEncoder.withIndent('  ').convert(provider.currentSession.toJson());
+              Clipboard.setData(ClipboardData(text: jsonStr));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Mind Map JSON copied to clipboard!'),
+                  backgroundColor: AppColors.cardElevated,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+
+    if (isMobile) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => content,
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (_) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: content,
+        ),
+      );
+    }
   }
 
   @override
@@ -623,178 +740,189 @@ class FloatingDock extends StatelessWidget {
     final speech = context.watch<SpeechService>();
     final mindMap = context.watch<MindMapProvider>();
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black54,
-                blurRadius: 20,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (speech.isListening)
-                ElevatedButton.icon(
-                  onPressed: () => speech.stopListening(),
-                  icon: const Icon(Icons.pause_circle_filled_rounded, size: 16),
-                  label: const Text('Listening (Stop)', style: TextStyle(fontSize: 12)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.graphiteBtn,
-                    foregroundColor: AppColors.rose,
-                    side: const BorderSide(color: AppColors.graphiteBtnBorder),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  ),
-                )
-              else
-                ElevatedButton.icon(
-                  onPressed: () => _showAudioModePicker(context),
-                  icon: const Icon(Icons.play_circle_fill_rounded, size: 16),
-                  label: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Start Live Class', style: TextStyle(fontSize: 12)),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_drop_down_rounded, size: 16),
-                    ],
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.alabaster,
-                    foregroundColor: AppColors.alabasterText,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                  ),
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.surface.withValues(alpha: 0.96),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: AppColors.border),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black54,
+                  blurRadius: 18,
+                  offset: Offset(0, 6),
                 ),
-
-              const SizedBox(width: 6),
-
-              TextButton.icon(
-                onPressed: () => _showGenerateFromTopicDialog(context),
-                icon: const Icon(Icons.auto_awesome, size: 15, color: AppColors.textPrimary),
-                label: const Text('Topic / URL', style: TextStyle(fontSize: 12)),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                ),
-              ),
-
-              const SizedBox(width: 4),
-
-              TextButton.icon(
-                onPressed: () => _showAddManualNodeDialog(context),
-                icon: const Icon(Icons.add_rounded, size: 16),
-                label: const Text('Add Node', style: TextStyle(fontSize: 12)),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                ),
-              ),
-
-              const SizedBox(width: 4),
-
-              InkWell(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => PdfPreviewDialog(
-                      session: mindMap.currentSession,
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 1. Primary Hero Audio Button
+                if (speech.isListening)
+                  ElevatedButton.icon(
+                    onPressed: () => speech.stopListening(),
+                    icon: const Icon(Icons.stop_circle_rounded, size: 16),
+                    label: Text(
+                      'Stop (${speech.captureElapsedSeconds}s)',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                     ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(18),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF261919),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFF482525)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2A1515),
+                      foregroundColor: AppColors.rose,
+                      side: const BorderSide(color: Color(0xFF4C2222)),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  )
+                else
+                  ElevatedButton.icon(
+                    onPressed: () => _showAudioModePicker(context),
+                    icon: const Icon(Icons.mic_rounded, size: 15),
+                    label: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('Start Live Class', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                        SizedBox(width: 3),
+                        Icon(Icons.arrow_drop_down_rounded, size: 15),
+                      ],
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.alabaster,
+                      foregroundColor: AppColors.alabasterText,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.picture_as_pdf_rounded, size: 14, color: AppColors.rose),
-                      SizedBox(width: 5),
-                      Text(
-                        'PDF Notes',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.rose,
-                        ),
+
+                const SizedBox(width: 4),
+
+                // 2. Topic / URL
+                TextButton.icon(
+                  onPressed: () => _showGenerateFromTopicDialog(context),
+                  icon: const Icon(Icons.auto_awesome, size: 14, color: AppColors.textPrimary),
+                  label: const Text('Topic / URL', style: TextStyle(fontSize: 11.5)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+
+                const SizedBox(width: 2),
+
+                // 3. Add Node
+                TextButton.icon(
+                  onPressed: () => _showAddManualNodeDialog(context),
+                  icon: const Icon(Icons.add_rounded, size: 15),
+                  label: const Text('Add Node', style: TextStyle(fontSize: 11.5)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+
+                const SizedBox(width: 2),
+
+                // 4. PDF Notes
+                InkWell(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => PdfPreviewDialog(
+                        session: mindMap.currentSession,
                       ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 4),
-
-              TextButton.icon(
-                onPressed: () => _showSaveAndExportMenu(context),
-                icon: const Icon(Icons.bookmark_border_rounded, size: 16),
-                label: const Text('Export', style: TextStyle(fontSize: 12)),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                ),
-              ),
-
-              const SizedBox(width: 4),
-
-              Container(height: 20, width: 1, color: AppColors.border),
-
-              const SizedBox(width: 4),
-
-              Tooltip(
-                message: 'Pop out always-on-top floating PiP companion',
-                child: InkWell(
-                  onTap: () async {
-                    await mindMap.openExternalPip();
+                    );
                   },
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(16),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6.5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF261919),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF482525)),
+                    ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.picture_in_picture_alt_rounded,
-                          size: 15,
-                          color: AppColors.textPrimary,
-                        ),
-                        SizedBox(width: 6),
+                        Icon(Icons.picture_as_pdf_rounded, size: 13, color: AppColors.rose),
+                        SizedBox(width: 4),
                         Text(
-                          'Floating PiP',
+                          'PDF Notes',
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.rose,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+
+                const SizedBox(width: 2),
+
+                // 5. Export
+                TextButton.icon(
+                  onPressed: () => _showSaveAndExportMenu(context),
+                  icon: const Icon(Icons.bookmark_border_rounded, size: 15),
+                  label: const Text('Export', style: TextStyle(fontSize: 11.5)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+
+                const SizedBox(width: 2),
+
+                Container(height: 16, width: 1, color: AppColors.border),
+
+                const SizedBox(width: 2),
+
+                // 6. Floating PiP
+                InkWell(
+                  onTap: () async {
+                    await mindMap.openExternalPip();
+                  },
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.picture_in_picture_alt_rounded,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'Floating PiP',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-      ],
+      ),
     );
   }
 }

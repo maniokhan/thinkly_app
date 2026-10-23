@@ -41,12 +41,12 @@ class GraphPainter extends CustomPainter {
     final nodeMap = {for (var n in nodes) n.id: n};
 
     final defaultPaint = Paint()
-      ..color = const Color(0xFF2E2E2E)
+      ..color = AppColors.borderLight
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5;
 
     final selectedPaint = Paint()
-      ..color = const Color(0xFF555555)
+      ..color = AppColors.borderSelected
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -94,7 +94,7 @@ class GraphPainter extends CustomPainter {
         (p1.dy * 0.45) + (p2.dy * 0.55),
       );
       final pulseDotPaint = Paint()
-        ..color = isEdgeSelected ? const Color(0xFF888888) : const Color(0xFF383838)
+        ..color = isEdgeSelected ? AppColors.indigo : AppColors.borderSubtle
         ..style = PaintingStyle.fill;
       canvas.drawCircle(midPoint, isEdgeSelected ? 2.5 : 1.8, pulseDotPaint);
     }
@@ -102,6 +102,9 @@ class GraphPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant GraphPainter oldDelegate) {
-    return true;
+    return oldDelegate.nodes != nodes ||
+        oldDelegate.edges != edges ||
+        oldDelegate.selectedNodeId != selectedNodeId ||
+        oldDelegate.hiddenNodeIds != hiddenNodeIds;
   }
 }

@@ -24,88 +24,170 @@ class _PdfPreviewDialogState extends State<PdfPreviewDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 650;
+
     return Dialog(
       backgroundColor: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: const BorderSide(color: AppColors.border),
       ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 10 : 24,
+        vertical: isMobile ? 12 : 24,
+      ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 880, maxHeight: 840),
         child: Column(
           children: [
-            // Header
+            // Header (Adaptive for mobile screens)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 18, vertical: 12),
               decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: AppColors.border)),
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(7),
-                    decoration: BoxDecoration(
-                      color: AppColors.pillTag,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Icon(
-                      Icons.picture_as_pdf_rounded,
-                      color: AppColors.rose,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
+              child: isMobile
+                  ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Thinkly AI Study Notes • PDF Document Preview',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2E1A1A),
+                                borderRadius: BorderRadius.circular(7),
+                                border: Border.all(color: const Color(0xFF4C2222)),
+                              ),
+                              child: const Icon(Icons.picture_as_pdf_rounded, color: AppColors.rose, size: 16),
+                            ),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Text(
+                                'Thinkly AI Study Notes • PDF Document Preview',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                              onPressed: () => Navigator.of(context).pop(),
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.session.title,
+                                style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            OutlinedButton.icon(
+                              onPressed: _isSharing
+                                  ? null
+                                  : () async {
+                                      setState(() => _isSharing = true);
+                                      try {
+                                        await _pdfService.sharePdf(
+                                          widget.session,
+                                          widget.customSummary,
+                                        );
+                                      } finally {
+                                        if (mounted) setState(() => _isSharing = false);
+                                      }
+                                    },
+                              icon: const Icon(Icons.share_rounded, size: 13),
+                              label: const Text('Share / Save', style: TextStyle(fontSize: 11)),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E1A1A),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFF4C2222)),
+                          ),
+                          child: const Icon(
+                            Icons.picture_as_pdf_rounded,
+                            color: AppColors.rose,
+                            size: 20,
                           ),
                         ),
-                        Text(
-                          widget.session.title,
-                          style: const TextStyle(
-                            fontSize: 11.5,
-                            color: AppColors.textSecondary,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Thinkly AI Study Notes • PDF Document Preview',
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                widget.session.title,
+                                style: const TextStyle(
+                                  fontSize: 11.5,
+                                  color: AppColors.textSecondary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _isSharing
+                              ? null
+                              : () async {
+                                  setState(() => _isSharing = true);
+                                  try {
+                                    await _pdfService.sharePdf(
+                                      widget.session,
+                                      widget.customSummary,
+                                    );
+                                  } finally {
+                                    if (mounted) setState(() => _isSharing = false);
+                                  }
+                                },
+                          icon: const Icon(Icons.share_rounded, size: 14),
+                          label: const Text('Share / Save', style: TextStyle(fontSize: 12)),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                          onPressed: () => Navigator.of(context).pop(),
+                          visualDensity: VisualDensity.compact,
                         ),
                       ],
                     ),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: _isSharing
-                        ? null
-                        : () async {
-                            setState(() => _isSharing = true);
-                            try {
-                              await _pdfService.sharePdf(
-                                widget.session,
-                                widget.customSummary,
-                              );
-                            } finally {
-                              if (mounted) setState(() => _isSharing = false);
-                            }
-                          },
-                    icon: const Icon(Icons.share_rounded, size: 15),
-                    label: const Text('Share / Save', style: TextStyle(fontSize: 12)),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
-                    onPressed: () => Navigator.of(context).pop(),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ],
-              ),
             ),
 
             // PDF Interactive Viewer

@@ -12,32 +12,52 @@ class SavedLecturesDrawer extends StatelessWidget {
     final provider = context.watch<MindMapProvider>();
     final saved = provider.savedLectures;
 
-    return Drawer(
-      backgroundColor: AppColors.surface,
+    return Material(
+      color: AppColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(top: 10, bottom: 4),
+              decoration: BoxDecoration(
+                color: AppColors.borderRoot,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
+          // Header
           Container(
-            padding: const EdgeInsets.fromLTRB(20, 48, 20, 16),
+            padding: const EdgeInsets.fromLTRB(16, 10, 12, 12),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.border)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
-                  children: [
-                    Icon(Icons.library_books_rounded, color: AppColors.textPrimary, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Saved Lectures',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                const Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.library_books_rounded, color: AppColors.textPrimary, size: 20),
+                      SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Saved Lectures',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),

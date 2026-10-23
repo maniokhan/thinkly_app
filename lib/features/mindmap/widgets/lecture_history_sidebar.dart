@@ -7,10 +7,12 @@ import 'pdf_preview_dialog.dart';
 
 class LectureHistorySidebar extends StatelessWidget {
   final VoidCallback onClose;
+  final bool isBottomSheet;
 
   const LectureHistorySidebar({
     super.key,
     required this.onClose,
+    this.isBottomSheet = false,
   });
 
   String _formatDate(DateTime dt) {
@@ -84,13 +86,12 @@ class LectureHistorySidebar extends StatelessWidget {
     final savedLectures = provider.savedLectures;
 
     return Container(
-      width: 270,
+      width: isBottomSheet ? double.infinity : 290,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(16),
-          bottomLeft: Radius.circular(16),
-        ),
+        borderRadius: isBottomSheet
+            ? const BorderRadius.vertical(top: Radius.circular(20))
+            : BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: const [
           BoxShadow(
@@ -101,28 +102,48 @@ class LectureHistorySidebar extends StatelessWidget {
         ],
       ),
       child: Column(
+        mainAxisSize: isBottomSheet ? MainAxisSize.min : MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (isBottomSheet)
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(top: 10, bottom: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.borderRoot,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
           // Header
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 12, 12),
+            padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
-                  children: [
-                    Icon(Icons.history_edu_rounded, size: 18, color: AppColors.textPrimary),
-                    SizedBox(width: 8),
-                    Text(
-                      'Lecture History',
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.2,
+                const Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.history_edu_rounded, size: 18, color: AppColors.textPrimary),
+                      SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Lecture History',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.textSecondary),
@@ -156,11 +177,11 @@ class LectureHistorySidebar extends StatelessWidget {
           const Divider(height: 1, thickness: 1, color: AppColors.border),
 
           // List of Lectures
-          Expanded(
+          Flexible(
             child: savedLectures.isEmpty
                 ? Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.all(24.0),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -174,13 +195,14 @@ class LectureHistorySidebar extends StatelessWidget {
                           const Text(
                             'Recorded classes will appear here for one-click review & PDF export.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 10.5, color: AppColors.textMuted),
+                            style: TextStyle(fontSize: 11, color: AppColors.textMuted),
                           ),
                         ],
                       ),
                     ),
                   )
                 : ListView.builder(
+                    shrinkWrap: isBottomSheet,
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     itemCount: savedLectures.length,
                     itemBuilder: (context, index) {
@@ -192,14 +214,15 @@ class LectureHistorySidebar extends StatelessWidget {
                       return InkWell(
                         onTap: () {
                           provider.loadLecture(session);
+                          if (isBottomSheet) onClose();
                         },
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 6),
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
                             color: isActive ? AppColors.pillTag : AppColors.card,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                             border: Border.all(
                               color: isActive ? AppColors.borderSelected : AppColors.border,
                             ),
@@ -240,79 +263,70 @@ class LectureHistorySidebar extends StatelessWidget {
                                     ),
                                 ],
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 4),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
+                                  Text(
+                                    dateStr,
+                                    style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
+                                  ),
                                   Row(
                                     children: [
                                       Text(
                                         '${session.nodes.length} nodes',
-                                        style: const TextStyle(fontSize: 9.5, color: AppColors.textMuted),
+                                        style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
                                       ),
                                       if (notesCount > 0) ...[
                                         const SizedBox(width: 4),
-                                        const Text('•', style: TextStyle(fontSize: 9.5, color: AppColors.textMuted)),
-                                        const SizedBox(width: 4),
-                                        const Icon(Icons.edit_note_rounded, size: 12, color: AppColors.nodeStudentNote),
-                                        const SizedBox(width: 2),
                                         Text(
-                                          '$notesCount',
-                                          style: const TextStyle(fontSize: 9.5, color: AppColors.nodeStudentNote, fontWeight: FontWeight.w600),
+                                          '• $notesCount notes',
+                                          style: const TextStyle(fontSize: 10, color: AppColors.nodeStudentNote),
                                         ),
                                       ],
                                     ],
                                   ),
-                                  Row(
-                                    children: [
-                                      InkWell(
-                                        onTap: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (_) => PdfPreviewDialog(session: session),
-                                          );
-                                        },
-                                        child: const Padding(
-                                          padding: EdgeInsets.all(2),
-                                          child: Icon(Icons.picture_as_pdf_rounded, size: 14, color: AppColors.rose),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      InkWell(
-                                        onTap: () async {
-                                          final confirm = await showDialog<bool>(
-                                            context: context,
-                                            builder: (c) => AlertDialog(
-                                              backgroundColor: AppColors.surface,
-                                              title: const Text('Delete Lecture?', style: TextStyle(fontSize: 14)),
-                                              content: Text('Delete "${session.title}" from saved history?'),
-                                              actions: [
-                                                TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                                                ElevatedButton(
-                                                  onPressed: () => Navigator.pop(c, true),
-                                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.rose),
-                                                  child: const Text('Delete'),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                          if (confirm == true) {
-                                            provider.deleteSavedLecture(session.id);
-                                          }
-                                        },
-                                        child: const Padding(
-                                          padding: EdgeInsets.all(2),
-                                          child: Icon(Icons.delete_outline_rounded, size: 14, color: AppColors.textMuted),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ],
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                dateStr,
-                                style: const TextStyle(fontSize: 9, color: AppColors.textMuted),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  InkWell(
+                                    onTap: () {
+                                      showDialog(
+                                        context: context,
+                                        builder: (_) => PdfPreviewDialog(session: session),
+                                      );
+                                    },
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF261919),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: const Color(0xFF482525)),
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.picture_as_pdf_rounded, size: 11, color: AppColors.rose),
+                                          SizedBox(width: 3),
+                                          Text('PDF', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: AppColors.rose)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  InkWell(
+                                    onTap: () => provider.deleteSavedLecture(session.id),
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(2),
+                                      child: Icon(Icons.delete_outline_rounded, size: 14, color: AppColors.textMuted),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),

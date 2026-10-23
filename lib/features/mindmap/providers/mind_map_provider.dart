@@ -223,6 +223,18 @@ class MindMapProvider extends ChangeNotifier {
     startNewLecture(title ?? 'New Lecture Session');
   }
 
+  void renameSession(String newTitle) {
+    if (newTitle.trim().isEmpty) return;
+    _currentSession.title = newTitle.trim();
+    if (_currentSession.nodes.isNotEmpty && _currentSession.nodes.first.category == NodeCategory.root) {
+      _currentSession.nodes.first.label = newTitle.trim();
+    }
+    _currentSession.lastModified = DateTime.now();
+    _syncPipState();
+    saveCurrentLecture();
+    notifyListeners();
+  }
+
   Future<void> processTranscriptChunk(String chunk) async {
     if (_isExtracting) return;
     _isExtracting = true;

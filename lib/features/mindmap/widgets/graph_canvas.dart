@@ -86,9 +86,7 @@ class _GraphCanvasState extends State<GraphCanvas> {
 
         if (!_hasInitialCentered && constraints.maxWidth > 0) {
           _hasInitialCentered = true;
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _centerCanvas(viewportSize);
-          });
+          _centerCanvas(viewportSize);
         }
 
         return Stack(
@@ -104,6 +102,7 @@ class _GraphCanvasState extends State<GraphCanvas> {
                 height: _canvasSize,
                 child: Stack(
                   children: [
+                    // Canvas Edges and Background Grid Painter
                     Positioned.fill(
                       child: CustomPaint(
                         painter: GraphPainter(
@@ -115,6 +114,8 @@ class _GraphCanvasState extends State<GraphCanvas> {
                         ),
                       ),
                     ),
+
+                    // Interactive Node Cards
                     for (final node in nodes)
                       if (!hiddenNodeIds.contains(node.id))
                         _buildNodeWidget(context, provider, node, selectedNode?.id == node.id),
@@ -122,12 +123,14 @@ class _GraphCanvasState extends State<GraphCanvas> {
                 ),
               ),
             ),
+
+            // Zoom & Focus Floating Controls
             Positioned(
-              right: 20,
-              bottom: 84,
+              right: 14,
+              bottom: 80,
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withValues(alpha: 0.92),
+                  color: AppColors.surface.withValues(alpha: 0.94),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppColors.border),
                   boxShadow: const [
@@ -138,7 +141,7 @@ class _GraphCanvasState extends State<GraphCanvas> {
                     ),
                   ],
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -199,14 +202,14 @@ class _GraphCanvasState extends State<GraphCanvas> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: isRoot ? AppColors.cardRoot : AppColors.card,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isActiveTopic
-                  ? AppColors.alabaster
+                  ? AppColors.emerald
                   : (isRoot
                       ? (isSelected ? AppColors.textPrimary : AppColors.borderRoot)
-                      : (isSelected ? AppColors.borderSelected : const Color(0xFF2E2E2E))),
-              width: isActiveTopic ? 1.8 : (isRoot ? 1.5 : (isSelected ? 1.5 : 1.0)),
+                      : (isSelected ? AppColors.borderSelected : AppColors.border)),
+              width: isActiveTopic ? 1.8 : (isRoot ? 1.5 : (isSelected ? 1.8 : 1.0)),
             ),
             boxShadow: const [
               BoxShadow(
@@ -229,19 +232,19 @@ class _GraphCanvasState extends State<GraphCanvas> {
                       decoration: BoxDecoration(
                         color: AppColors.pillTag,
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(color: AppColors.emerald.withValues(alpha: 0.5)),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.record_voice_over_rounded, size: 10, color: AppColors.textPrimary),
+                          Icon(Icons.record_voice_over_rounded, size: 10, color: AppColors.emerald),
                           SizedBox(width: 4),
                           Text(
                             'LIVE FOCUS',
                             style: TextStyle(
                               fontSize: 8.5,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: AppColors.emerald,
                               letterSpacing: 0.3,
                             ),
                           ),
@@ -249,7 +252,29 @@ class _GraphCanvasState extends State<GraphCanvas> {
                       ),
                     )
                   else
-                    const SizedBox.shrink(),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: node.category.color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          node.category.displayName.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 8.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.4,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

@@ -18,10 +18,51 @@ class _MindMapScreenState extends State<MindMapScreen> {
   bool _showInspector = false;
   bool _showHistory = false;
 
+  void _openMobileNodeInspector(BuildContext context) {
+    final provider = context.read<MindMapProvider>();
+    final node = provider.selectedNode;
+    if (node == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.80,
+        ),
+        child: NodeInspectorSheet(
+          node: node,
+          isBottomSheet: true,
+          onClose: () => Navigator.pop(ctx),
+        ),
+      ),
+    );
+  }
+
+  void _openMobileHistory(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.80,
+        ),
+        child: LectureHistorySidebar(
+          isBottomSheet: true,
+          onClose: () => Navigator.pop(ctx),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<MindMapProvider>();
     final selectedNode = provider.selectedNode;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 700;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -31,28 +72,36 @@ class _MindMapScreenState extends State<MindMapScreen> {
           Positioned.fill(
             child: GraphCanvas(
               onNodeSelected: () {
-                setState(() {
-                  _showInspector = true;
-                  _showHistory = false;
-                });
+                if (isCompact) {
+                  _openMobileNodeInspector(context);
+                } else {
+                  setState(() {
+                    _showInspector = true;
+                    _showHistory = false;
+                  });
+                }
               },
             ),
           ),
 
           // 2. Top Live Audio & Status Bar
           Positioned(
-            top: 14,
-            left: 16,
-            right: 16,
+            top: 10,
+            left: 10,
+            right: 10,
             child: Center(
               child: LiveStatusAudioBar(
                 onToggleHistory: () {
-                  setState(() {
-                    _showHistory = !_showHistory;
-                    if (_showHistory) _showInspector = false;
-                  });
+                  if (isCompact) {
+                    _openMobileHistory(context);
+                  } else {
+                    setState(() {
+                      _showHistory = !_showHistory;
+                      if (_showHistory) _showInspector = false;
+                    });
+                  }
                 },
-                isHistoryOpen: _showHistory,
+                isHistoryOpen: !isCompact && _showHistory,
               ),
             ),
           ),
@@ -61,18 +110,18 @@ class _MindMapScreenState extends State<MindMapScreen> {
           const Positioned(
             left: 0,
             right: 0,
-            bottom: 20,
+            bottom: 16,
             child: Center(
               child: FloatingDock(),
             ),
           ),
 
-          // 4. Slide-Over Node Inspector (Opened when a node is tapped)
-          if (_showInspector && selectedNode != null)
+          // 4. Slide-Over Node Inspector (Tablet & Desktop Only)
+          if (!isCompact && _showInspector && selectedNode != null)
             Positioned(
-              top: 68,
+              top: 56,
               right: 14,
-              bottom: 24,
+              bottom: 20,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: NodeInspectorSheet(
@@ -84,12 +133,12 @@ class _MindMapScreenState extends State<MindMapScreen> {
               ),
             ),
 
-          // 5. Collapsible Right-Side History Sidebar
-          if (_showHistory)
+          // 5. Collapsible Right-Side History Sidebar (Tablet & Desktop Only)
+          if (!isCompact && _showHistory)
             Positioned(
-              top: 68,
+              top: 56,
               right: 14,
-              bottom: 24,
+              bottom: 20,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: LectureHistorySidebar(

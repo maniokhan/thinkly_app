@@ -7,11 +7,13 @@ import '../providers/mind_map_provider.dart';
 class NodeInspectorSheet extends StatefulWidget {
   final MindMapNode node;
   final VoidCallback onClose;
+  final bool isBottomSheet;
 
   const NodeInspectorSheet({
     super.key,
     required this.node,
     required this.onClose,
+    this.isBottomSheet = false,
   });
 
   @override
@@ -56,24 +58,42 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
     final isRoot = widget.node.category == NodeCategory.root;
 
     return Container(
-      width: 360,
-      decoration: const BoxDecoration(
+      width: widget.isBottomSheet ? double.infinity : 340,
+      decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border(left: BorderSide(color: AppColors.border, width: 1.0)),
-        boxShadow: [
+        borderRadius: widget.isBottomSheet
+            ? const BorderRadius.vertical(top: Radius.circular(20))
+            : BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1.0),
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black45,
-            blurRadius: 16,
-            offset: Offset(-3, 0),
+            color: Colors.black54,
+            blurRadius: 20,
+            offset: Offset(0, -2),
           ),
         ],
       ),
       child: Column(
+        mainAxisSize: widget.isBottomSheet ? MainAxisSize.min : MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Drag handle for bottom sheet
+          if (widget.isBottomSheet)
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(top: 10, bottom: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.borderRoot,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
           // Inspector Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.border)),
             ),
@@ -117,9 +137,10 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
           ),
 
           // Scrollable Body
-          Expanded(
+          Flexible(
             child: ListView(
-              padding: const EdgeInsets.all(18),
+              shrinkWrap: widget.isBottomSheet,
+              padding: const EdgeInsets.all(16),
               children: [
                 Wrap(
                   spacing: 8,
@@ -159,9 +180,9 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.pillTag,
+                          color: const Color(0xFF261E14),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: AppColors.border),
+                          border: Border.all(color: const Color(0xFF4C361A)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
@@ -199,7 +220,7 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.card,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
@@ -208,7 +229,7 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
                       const Text(
                         'AI SUMMARY & CONTEXT',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.8,
                           color: AppColors.textMuted,
@@ -235,7 +256,7 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.card,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Column(
@@ -248,7 +269,7 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
                             Text(
                               'CAPTURED POINTS & EMPHASIS',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 9.5,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 0.8,
                                 color: AppColors.textMuted,
@@ -308,15 +329,15 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
 
                 TextField(
                   controller: _notesController,
-                  maxLines: 4,
+                  maxLines: 3,
                   style: const TextStyle(fontSize: 13, color: AppColors.textPrimary),
                   decoration: const InputDecoration(
-                    hintText: 'Add reflections, notes, or teacher emphasis (auto-saves)...',
+                    hintText: 'Add reflections or teacher emphasis (auto-saves)...',
                   ),
                   onChanged: (val) => _saveNote(provider),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 ElevatedButton.icon(
                   onPressed: provider.isExtracting
@@ -331,7 +352,7 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.alabaster,
                     foregroundColor: AppColors.alabasterText,
-                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
 
@@ -351,7 +372,7 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
                       style: const TextStyle(fontSize: 12),
                     ),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 11),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
                       side: const BorderSide(color: AppColors.border),
                     ),
                   ),
@@ -371,14 +392,17 @@ class _NodeInspectorSheetState extends State<NodeInspectorSheet> {
                   ),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: AppColors.amber.withValues(alpha: 0.4)),
-                    padding: const EdgeInsets.symmetric(vertical: 11),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
 
                 if (!isRoot) ...[
                   const SizedBox(height: 8),
                   TextButton.icon(
-                    onPressed: () => provider.deleteNode(widget.node.id),
+                    onPressed: () {
+                      provider.deleteNode(widget.node.id);
+                      widget.onClose();
+                    },
                     icon: const Icon(Icons.delete_outline, size: 16, color: AppColors.rose),
                     label: const Text('Delete Node from Graph', style: TextStyle(color: AppColors.rose, fontSize: 12)),
                   ),
