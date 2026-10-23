@@ -382,14 +382,12 @@ Extract the knowledge graph JSON now:
         temperature: 0.3,
       );
 
-      return _parseDeltaJson(jsonText, existingNodes);
+      final result = _parseDeltaJson(jsonText, existingNodes);
+      if (result.actions.isNotEmpty) return result;
+      return _generateLocalDeltaFromChunk(transcriptChunk, existingNodes, rootTopic);
     } catch (e) {
-      debugPrint('[GeminiAiService] Extraction error: $e');
-      return MindMapDeltaResult(
-        actions: [],
-        rawResponse: '{}',
-        extractedTranscript: transcriptChunk,
-      );
+      debugPrint('[GeminiAiService] Extraction fallback: $e');
+      return _generateLocalDeltaFromChunk(transcriptChunk, existingNodes, rootTopic);
     }
   }
 
@@ -550,6 +548,71 @@ Generate between 5 to 7 interconnected, high-quality academic nodes branching fr
       actions: actions,
       rawResponse: 'Fallback knowledge blueprint generated for $topic',
       extractedTranscript: 'Synthesized deep conceptual breakdown for $topic',
+    );
+  }
+
+  MindMapDeltaResult _generateLocalDeltaFromChunk(
+    String transcriptChunk,
+    List<MindMapNode> existingNodes,
+    String rootTopic,
+  ) {
+    final clean = transcriptChunk.trim();
+    if (clean.length < 12) {
+      return MindMapDeltaResult(
+        actions: [],
+        rawResponse: '{}',
+        extractedTranscript: transcriptChunk,
+      );
+    }
+
+    final rootId = existingNodes.isNotEmpty ? existingNodes.first.id : 'root';
+    String parentId = rootId;
+
+    // Attach to the latest coreConcept if one exists, otherwise root
+    final concepts = existingNodes.where((n) => n.category == NodeCategory.coreConcept).toList();
+    if (concepts.isNotEmpty && existingNodes.length >= 2) {
+      parentId = concepts.last.id;
+    }
+
+    NodeCategory category = NodeCategory.coreConcept;
+    final lower = clean.toLowerCase();
+    if (lower.contains('defined as') || lower.contains('definition') || lower.contains('means') || lower.contains('stands for')) {
+      category = NodeCategory.definition;
+    } else if (lower.contains('for example') || lower.contains('instance') || lower.contains('case study') || lower.contains('such as')) {
+      category = NodeCategory.example;
+    } else if (clean.endsWith('?') || lower.contains('why') || lower.contains('what is') || lower.contains('how')) {
+      category = NodeCategory.question;
+    }
+
+    // Extract punchy 2-5 word label
+    String title = clean;
+    final firstClause = clean.split(RegExp(r'[,:;?!.-]')).first.trim();
+    final words = firstClause.split(RegExp(r'\s+'));
+    if (words.length > 5) {
+      title = words.take(5).join(' ');
+    } else if (firstClause.isNotEmpty) {
+      title = firstClause;
+    }
+
+    final newNodeId = 'node_${_uuid.v4().substring(0, 6)}';
+    final newNode = MindMapNode(
+      id: newNodeId,
+      parentId: parentId,
+      label: title,
+      summary: clean,
+      category: category,
+      keyPoints: [clean],
+      importance: 4,
+      isKeyTakeaway: category == NodeCategory.coreConcept,
+    );
+
+    return MindMapDeltaResult(
+      actions: [
+        MindMapDeltaAction(action: 'add_node', node: newNode),
+        MindMapDeltaAction(action: 'connect_edge', edge: MindMapEdge(fromId: parentId, toId: newNodeId)),
+      ],
+      rawResponse: '{"local": true}',
+      extractedTranscript: transcriptChunk,
     );
   }
 

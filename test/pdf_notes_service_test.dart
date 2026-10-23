@@ -80,5 +80,37 @@ void main() {
       // Ensure the generated document has substantial size containing styling and typography
       expect(pdfBytes.length, greaterThan(3000));
     });
+
+    test('generates massive 50+ page multi-page transcript without widget height overflow error', () async {
+      final service = PdfNotesService();
+
+      // Synthesize a huge 50,000-character transcript (like a real 90-minute lecture)
+      final longTranscript = StringBuffer();
+      for (int i = 1; i <= 300; i++) {
+        longTranscript.writeln(
+            '[$i:00] In this lecture segment, we explore advanced distributed systems paradigms, Byzantine Fault Tolerance, Raft consensus protocols, and Paxos state machine replication across geographically partitioned clusters.');
+      }
+
+      final session = LectureSession(
+        id: 'lec_massive_transcript',
+        title: 'Distributed Systems & Advanced Consensus Algorithms',
+        nodes: [
+          MindMapNode(
+            id: 'root_dist',
+            label: 'Distributed Systems & Advanced Consensus',
+            summary: 'Comprehensive analysis of fault-tolerant replicated state machines.',
+            category: NodeCategory.root,
+          ),
+        ],
+        edges: [],
+        transcriptHistory: longTranscript.toString(),
+      );
+
+      final pdfBytes = await service.generateLectureNotesPdf(session: session);
+      expect(pdfBytes, isNotNull);
+      expect(pdfBytes.isNotEmpty, isTrue);
+      expect(pdfBytes[0], 0x25); // %PDF
+      expect(pdfBytes.length, greaterThan(20000));
+    });
   });
 }

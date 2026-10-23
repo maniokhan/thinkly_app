@@ -79,18 +79,29 @@ class PdfNotesService {
       customSummary: customSummary,
     );
 
-    final appDir = await getApplicationDocumentsDirectory();
     final sanitizedTitle = session.title
         .replaceAll(RegExp(r'[^\w\s-]'), '')
         .replaceAll(' ', '_');
     final filename =
         'Thinkly_Notes_${sanitizedTitle}_${session.id.substring(0, 8)}.pdf';
-    final file = File('${appDir.path}/$filename');
-    await file.writeAsBytes(bytes);
-    return file.path;
+
+    if (kIsWeb) {
+      await Printing.sharePdf(bytes: bytes, filename: filename);
+      return filename;
+    }
+
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final file = File('${appDir.path}/$filename');
+      await file.writeAsBytes(bytes);
+      return file.path;
+    } catch (_) {
+      await Printing.sharePdf(bytes: bytes, filename: filename);
+      return filename;
+    }
   }
 
-  /// One-click share or direct download using SharePlus
+  /// One-click share or direct download using SharePlus with Printing fallback
   Future<void> sharePdf(
     LectureSession session, [
     String? customSummary,
@@ -102,19 +113,31 @@ class PdfNotesService {
       customSummary: customSummary,
     );
 
-    final tempDir = await getTemporaryDirectory();
     final sanitizedTitle = session.title
         .replaceAll(RegExp(r'[^\w\s-]'), '')
         .replaceAll(' ', '_');
-    final file = File('${tempDir.path}/Thinkly_Notes_$sanitizedTitle.pdf');
-    await file.writeAsBytes(bytes);
+    final filename = 'Thinkly_Notes_$sanitizedTitle.pdf';
 
-    await SharePlus.instance.share(
-      ShareParams(
-        files: [XFile(file.path, mimeType: 'application/pdf')],
-        text: 'Lecture Notes: ${session.title}',
-      ),
-    );
+    if (kIsWeb) {
+      await Printing.sharePdf(bytes: bytes, filename: filename);
+      return;
+    }
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/$filename');
+      await file.writeAsBytes(bytes);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path, mimeType: 'application/pdf')],
+          text: 'Lecture Notes: ${session.title}',
+        ),
+      );
+    } catch (e) {
+      debugPrint('[PdfNotesService] Native share exception: $e. Falling back to Printing.sharePdf');
+      await Printing.sharePdf(bytes: bytes, filename: filename);
+    }
   }
 
   /// Interactive Print or System PDF Viewer
@@ -381,50 +404,37 @@ Future<Uint8List> _generatePdfDocumentIsolate(_PdfBuildParams params) async {
           pw.SizedBox(height: 18),
 
           // 2. Executive Summary Callout
-          pw.Container(
-            padding: const pw.EdgeInsets.all(14),
-            decoration: pw.BoxDecoration(
-              color: PdfColors.white,
-              borderRadius: pw.BorderRadius.circular(6),
-              border: pw.Border.all(color: borderSubtle),
-            ),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Row(
-                  children: [
-                    pw.Container(
-                      width: 4,
-                      height: 14,
-                      color: accentColor,
-                    ),
-                    pw.SizedBox(width: 8),
-                    pw.Text(
-                      'EXECUTIVE SUMMARY',
-                      style: pw.TextStyle(
-                        color: accentColor,
-                        fontSize: 10,
-                        fontWeight: pw.FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                  ],
+          pw.Row(
+            children: [
+              pw.Container(
+                width: 4,
+                height: 14,
+                color: accentColor,
+              ),
+              pw.SizedBox(width: 8),
+              pw.Text(
+                'EXECUTIVE SUMMARY',
+                style: pw.TextStyle(
+                  color: accentColor,
+                  fontSize: 10,
+                  fontWeight: pw.FontWeight.bold,
+                  letterSpacing: 1.0,
                 ),
-                pw.SizedBox(height: 8),
-                pw.Text(
-                  params.customSummary ??
-                      analysis?.summary ??
-                      (session.nodes.isNotEmpty &&
-                              session.nodes.first.summary.isNotEmpty
-                          ? session.nodes.first.summary
-                          : 'Comprehensive architectural concepts extracted from live class audio.'),
-                  style: pw.TextStyle(
-                    color: textDark,
-                    fontSize: 9.5,
-                    lineSpacing: 2.5,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            params.customSummary ??
+                analysis?.summary ??
+                (session.nodes.isNotEmpty &&
+                        session.nodes.first.summary.isNotEmpty
+                    ? session.nodes.first.summary
+                    : 'Comprehensive architectural concepts extracted from live class audio.'),
+            style: pw.TextStyle(
+              color: textDark,
+              fontSize: 9.5,
+              lineSpacing: 2.2,
             ),
           ),
           pw.SizedBox(height: 18),
@@ -827,21 +837,9 @@ Future<Uint8List> _generatePdfDocumentIsolate(_PdfBuildParams params) async {
               ],
             ),
             pw.SizedBox(height: 8),
-            pw.Container(
-              padding: const pw.EdgeInsets.all(12),
-              decoration: pw.BoxDecoration(
-                color: bgLight,
-                borderRadius: pw.BorderRadius.circular(6),
-                border: pw.Border.all(color: borderSubtle),
-              ),
-              child: pw.Text(
-                session.transcriptHistory.trim(),
-                style: pw.TextStyle(
-                  color: textMuted,
-                  fontSize: 8,
-                  lineSpacing: 2.0,
-                ),
-              ),
+            ..._buildTranscriptParagraphs(
+              session.transcriptHistory.trim(),
+              textDark,
             ),
           ],
         ];
@@ -850,4 +848,71 @@ Future<Uint8List> _generatePdfDocumentIsolate(_PdfBuildParams params) async {
   );
 
   return pdf.save();
+}
+
+List<pw.Widget> _buildTranscriptParagraphs(
+  String transcript,
+  PdfColor textColor,
+) {
+  final lines = transcript.split('\n');
+  final paragraphs = <pw.Widget>[];
+  final buffer = StringBuffer();
+
+  for (final rawLine in lines) {
+    final trimmed = rawLine.trim();
+    if (trimmed.isEmpty) {
+      if (buffer.isNotEmpty) {
+        paragraphs.add(
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 6),
+            child: pw.Text(
+              buffer.toString().trim(),
+              style: pw.TextStyle(
+                color: textColor,
+                fontSize: 8.5,
+                lineSpacing: 1.8,
+              ),
+            ),
+          ),
+        );
+        buffer.clear();
+      }
+    } else {
+      if (buffer.length + trimmed.length > 450) {
+        paragraphs.add(
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(bottom: 6),
+            child: pw.Text(
+              buffer.toString().trim(),
+              style: pw.TextStyle(
+                color: textColor,
+                fontSize: 8.5,
+                lineSpacing: 1.8,
+              ),
+            ),
+          ),
+        );
+        buffer.clear();
+      }
+      buffer.writeln(trimmed);
+    }
+  }
+
+  if (buffer.isNotEmpty) {
+    paragraphs.add(
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(bottom: 6),
+        child: pw.Text(
+          buffer.toString().trim(),
+          style: pw.TextStyle(
+            color: textColor,
+            fontSize: 8.5,
+            lineSpacing: 1.8,
+          ),
+        ),
+      ),
+    );
+  }
+
+  return paragraphs;
 }

@@ -295,12 +295,171 @@ class MindMapProvider extends ChangeNotifier {
         ],
         analyzedAt: DateTime.now(),
       );
+      buildMindMapFromAnalysis(_currentSession.analysis!);
+      return;
     }
 
     _selectedNode = rootNode;
     _activeNodeId = rootId;
     _recalculateLayout();
     _syncPipState();
+    notifyListeners();
+  }
+
+  /// Construct a comprehensive multi-level Mind Map with all sub-graphs from a structured analysis
+  void buildMindMapFromAnalysis(LectureAnalysis analysis) {
+    final rootId = (_currentSession.nodes.isNotEmpty &&
+            _currentSession.nodes.first.category == NodeCategory.root)
+        ? _currentSession.nodes.first.id
+        : 'root_${_uuid.v4().substring(0, 6)}';
+
+    final sessionTitle = (analysis.title.isNotEmpty && analysis.title != 'Lecture Analysis')
+        ? analysis.title
+        : _currentSession.title;
+
+    final rootNode = MindMapNode(
+      id: rootId,
+      label: sessionTitle,
+      summary: analysis.summary.isNotEmpty
+          ? analysis.summary
+          : 'Central lecture synthesis and thesis.',
+      category: NodeCategory.root,
+      keyPoints: analysis.keyPoints.isNotEmpty
+          ? analysis.keyPoints.take(3).map((kp) => kp.text).toList()
+          : [
+              'Mastering core foundations of $sessionTitle',
+              'Real-world implementation paradigms & architectural blueprints',
+            ],
+      importance: 5,
+      isKeyTakeaway: true,
+      x: -420.0,
+      y: 0.0,
+    );
+
+    final newNodes = <MindMapNode>[rootNode];
+    final newEdges = <MindMapEdge>[];
+    final topicNodeMap = <String, MindMapNode>{};
+
+    // 1. Level 1 Subgraph Nodes: Core Concept nodes for each topic
+    final topics = analysis.topics.isNotEmpty
+        ? analysis.topics
+        : const [
+            AnalysisTopic(name: 'Core Foundations', importance: 90, mentions: 8),
+            AnalysisTopic(name: 'Architecture & Protocol', importance: 85, mentions: 6),
+            AnalysisTopic(name: 'Implementation & Practice', importance: 78, mentions: 5),
+          ];
+
+    for (final topic in topics) {
+      final topicId = 'topic_${_uuid.v4().substring(0, 6)}';
+      final topicNode = MindMapNode(
+        id: topicId,
+        parentId: rootId,
+        label: topic.name,
+        summary: 'Core lecture domain with ${topic.importance}% concept significance (${topic.mentions} citations).',
+        category: NodeCategory.coreConcept,
+        keyPoints: [
+          'Conceptual weight: ${topic.importance}/100',
+          'Lecture frequency: ${topic.mentions} mentions',
+        ],
+        importance: (topic.importance / 20).clamp(3, 5).round(),
+        isKeyTakeaway: topic.importance >= 85,
+      );
+      rootNode.childIds.add(topicId);
+      newNodes.add(topicNode);
+      newEdges.add(MindMapEdge(fromId: rootId, toId: topicId));
+      topicNodeMap[topic.name.toLowerCase()] = topicNode;
+    }
+
+    MindMapNode resolveParent(String text) {
+      final lower = text.toLowerCase();
+      for (final entry in topicNodeMap.entries) {
+        final words = entry.key.split(RegExp(r'\s+'));
+        for (final w in words) {
+          if (w.length > 3 && lower.contains(w)) {
+            return entry.value;
+          }
+        }
+      }
+      if (topicNodeMap.isNotEmpty) {
+        final list = topicNodeMap.values.toList();
+        return list[newNodes.length % list.length];
+      }
+      return rootNode;
+    }
+
+    // 2. Level 2 Sub-nodes: Definitions
+    for (final def in analysis.definitions) {
+      final parts = def.split(':');
+      final term = parts.first.trim();
+      final explanation = parts.length > 1 ? parts.sublist(1).join(':').trim() : def;
+      final parent = resolveParent(term);
+      final defId = 'def_${_uuid.v4().substring(0, 6)}';
+      final defNode = MindMapNode(
+        id: defId,
+        parentId: parent.id,
+        label: term.length > 30 ? '${term.substring(0, 27)}...' : term,
+        summary: explanation,
+        category: NodeCategory.definition,
+        keyPoints: [explanation],
+        importance: 4,
+      );
+      parent.childIds.add(defId);
+      newNodes.add(defNode);
+      newEdges.add(MindMapEdge(fromId: parent.id, toId: defId));
+    }
+
+    // 3. Level 2 Sub-nodes: Chronological Key Takeaways / Examples
+    for (final kp in analysis.keyPoints) {
+      final parent = resolveParent(kp.text);
+      final kpId = 'kp_${_uuid.v4().substring(0, 6)}';
+      final kpNode = MindMapNode(
+        id: kpId,
+        parentId: parent.id,
+        label: kp.text.length > 32 ? '${kp.text.substring(0, 29)}...' : kp.text,
+        summary: kp.text,
+        category: NodeCategory.example,
+        keyPoints: [
+          kp.text,
+          if (kp.timestamp.isNotEmpty) 'Timestamp: ${kp.timestamp}',
+        ],
+        importance: 3,
+        isKeyTakeaway: kp.timestamp.isNotEmpty,
+      );
+      parent.childIds.add(kpId);
+      newNodes.add(kpNode);
+      newEdges.add(MindMapEdge(fromId: parent.id, toId: kpId));
+    }
+
+    // 4. Level 2 Sub-nodes: Active Recall Practice Questions
+    for (final q in analysis.questions) {
+      final parent = resolveParent(q);
+      final qId = 'q_${_uuid.v4().substring(0, 6)}';
+      final qNode = MindMapNode(
+        id: qId,
+        parentId: parent.id,
+        label: q.length > 32 ? '${q.substring(0, 29)}...' : q,
+        summary: q,
+        category: NodeCategory.question,
+        keyPoints: [q],
+        importance: 4,
+      );
+      parent.childIds.add(qId);
+      newNodes.add(qNode);
+      newEdges.add(MindMapEdge(fromId: parent.id, toId: qId));
+    }
+
+    _currentSession.title = sessionTitle;
+    _currentSession.nodes.clear();
+    _currentSession.nodes.addAll(newNodes);
+    _currentSession.edges.clear();
+    _currentSession.edges.addAll(newEdges);
+    _currentSession.lastModified = DateTime.now();
+    _selectedNode = rootNode;
+    _activeNodeId = rootId;
+
+    _recalculateLayout();
+    _syncPipState();
+    saveCurrentLecture();
     notifyListeners();
   }
 
@@ -474,6 +633,14 @@ class MindMapProvider extends ChangeNotifier {
         latestNodeTitle = newNode.label;
 
         if (!_currentSession.nodes.any((n) => n.id == newNode.id)) {
+          // If parentId is not specified or does not exist, attach to root
+          final rootId = _currentSession.nodes.isNotEmpty ? _currentSession.nodes.first.id : null;
+          if (newNode.parentId == null ||
+              newNode.parentId!.isEmpty ||
+              !_currentSession.nodes.any((n) => n.id == newNode.parentId)) {
+            newNode.parentId = rootId;
+          }
+
           _currentSession.nodes.add(newNode);
           if (newNode.parentId != null) {
             final parent = _currentSession.nodes.firstWhere(
@@ -769,19 +936,17 @@ class MindMapProvider extends ChangeNotifier {
       );
 
       _currentSession.analysis = analysis;
-      if (_currentSession.title == 'Listening for Lecture Topic...' ||
-          _currentSession.title == 'New Lecture Session' ||
-          _currentSession.title == 'Zero Trust Architecture & Enterprise Defense') {
-        if (analysis.title.isNotEmpty &&
-            analysis.title != 'Lecture Analysis') {
-          _currentSession.title = analysis.title;
-          if (_currentSession.nodes.isNotEmpty &&
-              _currentSession.nodes.first.category == NodeCategory.root) {
-            _currentSession.nodes.first.label = analysis.title;
-            _currentSession.nodes.first.summary = analysis.summary;
-          }
+      if (analysis.title.isNotEmpty && analysis.title != 'Lecture Analysis') {
+        _currentSession.title = analysis.title;
+        if (_currentSession.nodes.isNotEmpty &&
+            _currentSession.nodes.first.category == NodeCategory.root) {
+          _currentSession.nodes.first.label = analysis.title;
+          _currentSession.nodes.first.summary = analysis.summary;
         }
       }
+
+      // Automatically construct full multi-level hierarchical mind map with all sub-graphs!
+      buildMindMapFromAnalysis(analysis);
 
       await saveCurrentLecture();
       _analysisStatusMessage = 'Analysis complete!';

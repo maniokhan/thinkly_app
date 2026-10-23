@@ -18,19 +18,38 @@ import '../widgets/node_inspector_sheet.dart';
 
 class LectureResultsScreen extends StatefulWidget {
   final VoidCallback? onBackToRecord;
+  final int initialSegment;
 
-  const LectureResultsScreen({super.key, this.onBackToRecord});
+  const LectureResultsScreen({
+    super.key,
+    this.onBackToRecord,
+    this.initialSegment = 0,
+  });
 
   @override
   State<LectureResultsScreen> createState() => _LectureResultsScreenState();
 }
 
 class _LectureResultsScreenState extends State<LectureResultsScreen> {
-  int _selectedSegment = 0; // 0: Summary, 1: Graphs, 2: PDF, 3: Mind Map
+  late int _selectedSegment; // 0: Summary, 1: Graphs, 2: PDF, 3: Mind Map
   final PdfNotesService _pdfService = PdfNotesService();
   final GlobalKey _chartsExportKey = GlobalKey();
   bool _isGeneratingPdf = false;
   Uint8List? _cachedPdfBytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedSegment = widget.initialSegment;
+  }
+
+  @override
+  void didUpdateWidget(covariant LectureResultsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialSegment != oldWidget.initialSegment) {
+      _selectedSegment = widget.initialSegment;
+    }
+  }
 
   Future<void> _makeOrSharePdf(MindMapProvider provider) async {
     setState(() => _isGeneratingPdf = true);

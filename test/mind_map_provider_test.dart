@@ -11,13 +11,28 @@ void main() {
   });
 
   group('MindMapProvider Tests', () {
-    test('initializes default lecture session with root node', () {
+    test('initializes default lecture session with complete multi-level sub-graphs', () {
       final provider = MindMapProvider();
 
-      expect(provider.nodes.isNotEmpty, isTrue);
+      expect(provider.nodes.length, greaterThan(10));
+      expect(provider.edges.length, greaterThan(10));
       expect(provider.nodes.first.category, NodeCategory.root);
       expect(provider.currentSession.title, 'Zero Trust Architecture & Enterprise Defense');
       expect(provider.selectedNode, isNotNull);
+
+      // Verify coreConcept topic subgraphs exist and are connected to root
+      final rootId = provider.nodes.first.id;
+      final topicNodes = provider.nodes.where((n) => n.category == NodeCategory.coreConcept).toList();
+      expect(topicNodes.length, greaterThanOrEqualTo(5));
+
+      for (final topic in topicNodes) {
+        expect(provider.edges.any((e) => e.fromId == rootId && e.toId == topic.id), isTrue);
+      }
+
+      // Verify Level 2 sub-nodes (definitions, questions, takeaways)
+      expect(provider.nodes.any((n) => n.category == NodeCategory.definition), isTrue);
+      expect(provider.nodes.any((n) => n.category == NodeCategory.question), isTrue);
+      expect(provider.nodes.any((n) => n.category == NodeCategory.example), isTrue);
     });
 
     test('adds manual node and connects edge to parent', () {

@@ -55,6 +55,7 @@ class ThinklyShell extends StatefulWidget {
 
 class _ThinklyShellState extends State<ThinklyShell> {
   int _currentIndex = 0;
+  int _resultsInitialSegment = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -62,17 +63,24 @@ class _ThinklyShellState extends State<ThinklyShell> {
     switch (_currentIndex) {
       case 0:
         activeScreen = LectureCaptureScreen(
-          onNavigateToResults: () => setState(() => _currentIndex = 1),
+          onNavigateToResults: ([int segment = 0]) => setState(() {
+            _currentIndex = 1;
+            _resultsInitialSegment = segment;
+          }),
         );
         break;
       case 1:
         activeScreen = LectureResultsScreen(
+          initialSegment: _resultsInitialSegment,
           onBackToRecord: () => setState(() => _currentIndex = 0),
         );
         break;
       case 2:
         activeScreen = LectureLibraryScreen(
-          onSelectLecture: () => setState(() => _currentIndex = 1),
+          onSelectLecture: () => setState(() {
+            _currentIndex = 1;
+            _resultsInitialSegment = 0;
+          }),
         );
         break;
       default:

@@ -222,49 +222,58 @@ class _LectureLibraryScreenState extends State<LectureLibraryScreen> {
                                 const SizedBox(height: AppSpacing.m),
                                 Row(
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.raisedSurface,
-                                        borderRadius: BorderRadius.circular(4),
-                                        border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
-                                      ),
-                                      child: Text(
-                                        '${item.nodes.length} CONCEPTS',
-                                        style: AppTypography.labelSmall.copyWith(color: AppColors.primaryText),
+                                    Expanded(
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.horizontal,
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.raisedSurface,
+                                                borderRadius: BorderRadius.circular(4),
+                                                border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
+                                              ),
+                                              child: Text(
+                                                '${item.nodes.length} CONCEPTS',
+                                                style: AppTypography.labelSmall.copyWith(color: AppColors.primaryText),
+                                              ),
+                                            ),
+                                            if (notesCount > 0) ...[
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.raisedSurface,
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  '$notesCount NOTES',
+                                                  style: AppTypography.labelSmall.copyWith(color: AppColors.accent),
+                                                ),
+                                              ),
+                                            ],
+                                            if (takeawaysCount > 0) ...[
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.raisedSurface,
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
+                                                ),
+                                                child: Text(
+                                                  '$takeawaysCount EXAM KEY',
+                                                  style: AppTypography.labelSmall.copyWith(color: AppColors.statusAmber),
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                    if (notesCount > 0) ...[
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.raisedSurface,
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
-                                        ),
-                                        child: Text(
-                                          '$notesCount NOTES',
-                                          style: AppTypography.labelSmall.copyWith(color: AppColors.accent),
-                                        ),
-                                      ),
-                                    ],
-                                    if (takeawaysCount > 0) ...[
-                                      const SizedBox(width: 6),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.raisedSurface,
-                                          borderRadius: BorderRadius.circular(4),
-                                          border: Border.all(color: AppColors.hairlineBorder, width: 0.8),
-                                        ),
-                                        child: Text(
-                                          '$takeawaysCount EXAM KEY',
-                                          style: AppTypography.labelSmall.copyWith(color: AppColors.statusAmber),
-                                        ),
-                                      ),
-                                    ],
-                                    const Spacer(),
+                                    const SizedBox(width: 4),
                                     // Quick PDF export button
                                     IconButton(
                                       icon: const Icon(Icons.picture_as_pdf_rounded, size: 18, color: AppColors.primaryText),

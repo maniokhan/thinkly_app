@@ -11,7 +11,7 @@ import '../../../widgets/api_key_settings_dialog.dart';
 import '../../../widgets/developer_debug_dialog.dart';
 
 class LectureCaptureScreen extends StatefulWidget {
-  final VoidCallback onNavigateToResults;
+  final void Function([int segment]) onNavigateToResults;
 
   const LectureCaptureScreen({
     super.key,
@@ -459,13 +459,22 @@ class _LectureCaptureScreenState extends State<LectureCaptureScreen> {
               ),
               const SizedBox(height: 16),
 
-              // 6. Quick Jump to Existing Results if already analyzed
+              // 6. View Mind Map & Results Shortcuts
+              if (provider.nodes.length > 1) ...[
+                AppButton(
+                  label: 'View concept mind map (${provider.nodes.length} nodes)',
+                  icon: Icons.hub_rounded,
+                  variant: AppButtonVariant.secondary,
+                  onPressed: () => widget.onNavigateToResults(3),
+                ),
+                const SizedBox(height: 10),
+              ],
               if (session.analysis != null) ...[
                 AppButton(
-                  label: 'View class results',
+                  label: 'View class results & summary',
                   icon: Icons.arrow_forward_rounded,
                   variant: AppButtonVariant.ghost,
-                  onPressed: widget.onNavigateToResults,
+                  onPressed: () => widget.onNavigateToResults(0),
                 ),
               ],
               const SizedBox(height: 32),
