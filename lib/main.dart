@@ -1,24 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'core/env/env_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/speech_service.dart';
+import 'core/config/app_config.dart';
 import 'features/mindmap/providers/mind_map_provider.dart';
 import 'features/mindmap/screens/lecture_capture_screen.dart';
 import 'features/mindmap/screens/lecture_results_screen.dart';
 import 'features/mindmap/screens/lecture_library_screen.dart';
+import 'features/debate/providers/debate_provider.dart';
+import 'features/mascot/controllers/mascot_controller.dart';
+import 'services/audio_service.dart';
+import 'services/gemini_live_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Portrait orientation for mobile
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   // Initialize Environment (.env and SharedPreferences)
   final envConfig = EnvConfig();
   await envConfig.initialize();
 
+  // Sync Gemini API key to AppConfig for AI Debate Live WebSocket
+  if (envConfig.apiKey.isNotEmpty) {
+    AppConfig.apiKey = envConfig.apiKey;
+  }
+
   // Initialize Speech Services & Web Interop
   final speechService = SpeechService();
   speechService.initialize();
+
+  // Initialize AI Debate Services
+  final audioService = AudioService();
+  final geminiLiveService = GeminiLiveService();
+  final mascotController = MascotController();
+  final debateProvider = DebateProvider(
+    audioService: audioService,
+    geminiService: geminiLiveService,
+    mascotController: mascotController,
+  );
 
   runApp(
     MultiProvider(
@@ -26,6 +53,8 @@ void main() async {
         ChangeNotifierProvider.value(value: envConfig),
         ChangeNotifierProvider.value(value: speechService),
         ChangeNotifierProvider(create: (_) => MindMapProvider()),
+        ChangeNotifierProvider.value(value: mascotController),
+        ChangeNotifierProvider.value(value: debateProvider),
       ],
       child: const ThinklyApp(),
     ),
@@ -38,7 +67,7 @@ class ThinklyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Thinkly | AI Live Class Notes, Graphs & PDF',
+      title: 'Thinkly | AI Live Class Notes & AI Debate Arena',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       home: const ThinklyShell(),

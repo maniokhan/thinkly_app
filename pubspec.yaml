@@ -1,5 +1,5 @@
 name: thinkly_app
-description: "Thinkly - AI Live Lecture Mind Map & Production PDF Notes Generator."
+description: "Thinkly - AI Live Lecture Mind Map, PDF Notes & Voice AI Debate Arena."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -31,10 +31,23 @@ dependencies:
   permission_handler: ^13.0.2
   youtube_explode_dart: ^3.1.0
 
+  # AI Debate Arena Dependencies
+  webview_flutter: ^4.10.0
+  web_socket_channel: ^3.0.1
+  record: ^7.1.2
+  flutter_pcm_sound: ^3.3.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo/thinkly_logo.png"
+  remove_alpha_ios: true
 
 dependency_overrides:
   archive: ^4.0.12
@@ -45,6 +58,9 @@ flutter:
   assets:
     - .env
     - assets/fonts/
+    - assets/avatar/
+    - assets/avatar/bible_strong_avatar.js
+    - assets/avatar/avatar.html
 
   fonts:
     - family: SpaceGrotesk
@@ -59,4 +75,3 @@ flutter:
     - family: NotoSans
       fonts:
         - asset: assets/fonts/NotoSans-Regular.ttf
-

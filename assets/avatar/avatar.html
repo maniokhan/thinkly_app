@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Debate AI Mascot</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent !important;
+      background-color: transparent !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #avatar-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .bs-avatar {
+      width: 100% !important;
+      height: 100% !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+    }
+    .bs-avatar svg {
+      width: 85% !important;
+      height: 85% !important;
+      overflow: visible;
+      transition: filter 0.3s ease-out, transform 0.1s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <div id="avatar-container"></div>
+  <script src="bible_strong_avatar.js"></script>
+  <script>
+    // Expose root window wrapper functions required by the prompt
+    window.setCharacter = function(name) {
+      if (window.MascotAPI && typeof window.MascotAPI.setCharacter === 'function') {
+        window.MascotAPI.setCharacter(name);
+      }
+    };
+
+    window.setState = function(state) {
+      if (window.MascotAPI && typeof window.MascotAPI.setState === 'function') {
+        window.MascotAPI.setState(state);
+      }
+    };
+
+    window.setEmotion = function(emotion) {
+      if (window.MascotAPI && typeof window.MascotAPI.setEmotion === 'function') {
+        window.MascotAPI.setEmotion(emotion);
+      }
+    };
+
+    window.setMouthLevel = function(level) {
+      if (window.MascotAPI && typeof window.MascotAPI.setMouthLevel === 'function') {
+        window.MascotAPI.setMouthLevel(level);
+      }
+    };
+
+    window.addEventListener('DOMContentLoaded', function() {
+      if (window.MascotAPI) {
+        window.MascotAPI.init('#avatar-container');
+      }
+    });
+  </script>
+</body>
+</html>
